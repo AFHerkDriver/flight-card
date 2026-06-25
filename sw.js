@@ -1,5 +1,5 @@
 /* Flight Card service worker */
-var CACHE = 'flightcard-v19';
+var CACHE = 'flightcard-v27';
 var CORE = ['./', './index.html', './manifest.json'];
 var ICONS = ['./icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png', './favicon.png'];
 
@@ -27,6 +27,7 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
+  if (new URL(req.url).origin !== self.location.origin) return; /* let cross-origin (METAR) bypass SW */
   var isNav = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').indexOf('text/html') !== -1;
 
