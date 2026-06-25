@@ -187,7 +187,6 @@ body[data-inflight] .inflightbar{display:flex;}
   justify-content:center;padding:24px 14px;overflow:auto;}
 #settings.on,#infomodal.on,#premodal.on{display:flex;}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:520px;padding:18px;}
-.sheet.wide{max-width:780px;}
 .sheet h3{font-family:var(--mono);font-size:14px;letter-spacing:1px;margin:0 0 14px;color:var(--txt);text-transform:uppercase;}
 .routetext{font-family:var(--mono);font-size:clamp(14px,3vw,18px);line-height:1.8;color:var(--txt);word-break:break-word;
   background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:14px;}
@@ -689,7 +688,7 @@ $('dispbtn').addEventListener('click',function(){
   if(rows)html+='<div class="kvlist">'+rows+'</div>';
   if(CURRENT.dispRemarks){html+='<div class="subhead">Remarks</div>'+remarksHTML(CURRENT.dispRemarks);copy+='\nREMARKS\n'+CURRENT.dispRemarks;}
   if(!html)html='<div class="iempty">\u2014 no dispatcher info \u2014</div>';
-  openInfo('Dispatcher',html,copy.trim(),true);
+  openInfo('Dispatcher',html,copy.trim());
 });
 $('rptbtn').addEventListener('click',function(){
   var p=CURRENT.rptpts||[];
