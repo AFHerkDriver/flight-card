@@ -5,7 +5,7 @@ A glance-legible, **offline-first** flight-deck reference card for the iPad EFB.
 > **Reference aid only.** Every value is parsed from text you paste and must be verified against the AOM/FCOM/FOM and the release itself. Nothing on this card is authoritative. Data is pulled one time, pre-flight; the app makes no live calls.
 
 Live: `https://afherkdriver.github.io/flightcard/`
-Internal cache: `flightcard-v27` · Milestone: **v2.0**
+Internal cache: `flightcard-v30` · Milestone: **v2.0**
 
 ---
 
@@ -122,6 +122,6 @@ flightcard/
 
 ## Version
 
-**2.0** — current milestone. Adds tap-to-update fields (PAX, arrival gate, oxygen, safe word), ATIS cycling from the Delta widget, the recolored ROUTE chips (airports green, waypoints blue, airways yellow, SID/STAR purple, DCT implied), dispatcher release number + tap-to-copy phone, the DONE button and crew lead labeling (LD/PUR) on the data card, the tap-to-reveal delay-fuel popup on the reserve, and the weather engine: tapping the departure ICAO shows the dispatch METAR scrubbed to current Zulu time (live METAR when online), and tapping the arrival ICAO shows the dispatch forecast for the planned arrival time. Internal cache `flightcard-v27`.
+**2.0** — current milestone. Adds tap-to-update fields (PAX, arrival gate, oxygen), safe word tap-to-reveal in pink with triple-tap to edit, ATIS cycling from the Delta widget, the recolored ROUTE chips (airports green, waypoints blue, airways yellow, SID/STAR purple, DCT implied), dispatcher release number + tap-to-copy phone, the DONE button and crew lead labeling (LD/PUR) on the data card, the tap-to-reveal delay-fuel popup on the reserve, and the weather engine: tapping the departure ICAO shows the dispatch METAR scrubbed to current Zulu time (live METAR when online), and tapping the arrival ICAO shows the dispatch forecast for the planned arrival time. Internal cache `flightcard-v30`.
 
 **1.0** — first stable milestone. Paste-and-parse flow with manual-entry prompt; flanked nav/fuel hero; ETE↔distance toggle; pushback and date-anchored FAR 117 countdowns; scheduled gate and landing-time parsing; styled ROUTE / DISPATCH / RPT PTS / REMARKS popups; crew first/last/employee capture. Internal cache `flightcard-v14`.

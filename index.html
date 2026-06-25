@@ -38,11 +38,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);-webkit-text-
 html[data-theme="night"]{
   --bg:#070a0b;--panel:#0e1314;--panel2:#0a0f10;--line:#1d2528;--line2:#141a1c;
   --txt:#e8eef0;--txt2:#9aa3a7;--txt3:#697277;
-  --green:#4ade80;--amber:#fbbf24;--red:#f0564d;--cyan:#5dcaa5;--hero:#ffffff;--accent:#2a3338;--blue:#5b9dff;--purple:#b794f6;}
+  --green:#4ade80;--amber:#fbbf24;--red:#f0564d;--cyan:#5dcaa5;--hero:#ffffff;--accent:#2a3338;--blue:#5b9dff;--purple:#b794f6;--pink:#f472b6;}
 html[data-theme="day"]{
   --bg:#dfe5e9;--panel:#ffffff;--panel2:#eef2f4;--line:#b9c4cb;--line2:#d4dbe0;
   --txt:#0a0f12;--txt2:#3c474d;--txt3:#5e696f;
-  --green:#0a7d43;--amber:#8a5a00;--red:#b42318;--cyan:#0f6e56;--hero:#000000;--accent:#b9c4cb;--blue:#2563eb;--purple:#7c3aed;}
+  --green:#0a7d43;--amber:#8a5a00;--red:#b42318;--cyan:#0f6e56;--hero:#000000;--accent:#b9c4cb;--blue:#2563eb;--purple:#7c3aed;--pink:#db2777;}
 #redveil{position:fixed;inset:0;background:#f00;mix-blend-mode:multiply;opacity:0;pointer-events:none;z-index:9000;transition:opacity .2s;}
 html[data-red] #redveil{opacity:.55;}
 #dimveil{position:fixed;inset:0;background:#000;opacity:var(--dim);pointer-events:none;z-index:9001;transition:opacity .15s;}
@@ -168,7 +168,7 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .crewc .lbl{margin-bottom:7px;}
 .swbtn{font-family:var(--mono);font-weight:700;letter-spacing:2px;font-size:clamp(15px,3vw,18px);min-height:44px;padding:0 20px;
   border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--txt2);cursor:pointer;}
-.swbtn.shown{color:var(--cyan);border-color:var(--cyan);}
+.swbtn.shown{color:var(--pink);border-color:var(--pink);}
 .cline{font-family:var(--mono);font-size:clamp(13px,2.6vw,15px);color:var(--txt);margin-top:14px;}
 .cline .emp{color:var(--txt3);}
 .cfas{font-family:var(--mono);font-size:clamp(12px,2.4vw,14px);color:var(--txt2);margin-top:5px;line-height:1.55;}
@@ -670,7 +670,14 @@ $('qe_input').addEventListener('keydown',function(e){if(e.key==='Enter')qeSave()
 $('c_pax').addEventListener('click',function(){quickEdit('pax','Passengers',{numeric:true,maxlen:3});});
 $('c_agate').addEventListener('click',function(){quickEdit('agate','Arrival gate',{upper:true,maxlen:5});});
 $('c_o2').addEventListener('click',function(){quickEdit('o2','Oxygen (psi)',{numeric:true,maxlen:4});});
-$('c_safebtn').addEventListener('click',function(){quickEdit('safe','Safe word',{upper:true,maxlen:20});});
+(function(){var sb=$('c_safebtn'),tapN=0,tapT=null;
+  function reveal(){var w=sb.dataset.word;if(!w)return;if(sb.classList.contains('shown')){sb.classList.remove('shown');sb.textContent='•••• TAP';}else{sb.classList.add('shown');sb.textContent=w;}}
+  sb.addEventListener('click',function(){
+    reveal();tapN++;clearTimeout(tapT);
+    if(tapN>=3){tapN=0;quickEdit('safe','Safe word',{upper:true,maxlen:20});return;}
+    tapT=setTimeout(function(){tapN=0;},450);
+  });
+})();
 
 /* METAR (online only) — tap a field ICAO */
 function pad3(n){return ('00'+n).slice(-3);}
