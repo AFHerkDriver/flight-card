@@ -125,9 +125,10 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .callrow{display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.6vw,16px);}
 .dwidget{height:clamp(30px,7.2vw,58px);width:auto;flex:0 0 auto;display:block;}
 .callsign{font-family:var(--mono);font-weight:700;color:var(--hero);line-height:.95;font-size:clamp(40px,9vw,80px);letter-spacing:1px;}
-.heavy{font-family:var(--mono);font-weight:700;letter-spacing:6px;color:var(--amber);font-size:clamp(18px,4vw,26px);margin-top:3px;}
+.heavy{font-family:var(--mono);font-weight:700;letter-spacing:6px;text-indent:6px;text-align:center;color:var(--amber);font-size:clamp(18px,4vw,26px);margin-top:3px;}
 .atis{font-family:var(--mono);font-size:clamp(13px,2.6vw,16px);color:var(--txt2);margin-top:10px;}
-#c_atis{cursor:pointer;-webkit-user-select:none;user-select:none;}
+.atispax{cursor:pointer;-webkit-user-select:none;user-select:none;padding:4px 16px;border-radius:12px;display:inline-block;}
+.atispax:active{background:var(--panel2);}
 .paxline{font-family:var(--mono);font-size:clamp(13px,2.6vw,16px);color:var(--txt2);margin-top:7px;}
 .paxline b{color:var(--txt);font-weight:600;}
 .plctr{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2.5vw,18px);}
@@ -182,10 +183,11 @@ body[data-inflight] .card{border-color:var(--accent);}
 .inflightbar{display:none;}
 body[data-inflight] .inflightbar{display:flex;}
 
-#settings,#infomodal{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
+#settings,#infomodal,#premodal{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
   justify-content:center;padding:24px 14px;overflow:auto;}
-#settings.on,#infomodal.on{display:flex;}
+#settings.on,#infomodal.on,#premodal.on{display:flex;}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:520px;padding:18px;}
+.sheet.wide{max-width:780px;}
 .sheet h3{font-family:var(--mono);font-size:14px;letter-spacing:1px;margin:0 0 14px;color:var(--txt);text-transform:uppercase;}
 .routetext{font-family:var(--mono);font-size:clamp(14px,3vw,18px);line-height:1.8;color:var(--txt);word-break:break-word;
   background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:14px;}
@@ -297,7 +299,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <div class="fld wide"><label>Full route (shows in ROUTE pop-out)</label><textarea id="f_route" rows="2" autocapitalize="characters" placeholder=""></textarea></div>
       <div class="fld"><label>Dep SID</label><input id="f_sid" autocapitalize="characters" placeholder=""></div>
       <div class="fld"><label>Arr STAR</label><input id="f_star" autocapitalize="characters" placeholder=""></div>
-      <div class="fld"><label>Landing field elev (ft)</label><input id="f_elev" inputmode="numeric" placeholder=""></div>
+      <div class="fld"><label>Field elev (ft)</label><input id="f_elev" inputmode="numeric" placeholder=""></div>
       <div class="fld"><label>Alternate (ICAO)</label><input id="f_altn" autocapitalize="characters" placeholder=""></div>
       <div class="fld"><label>Alt fuel (thousands)</label><input id="f_altf" inputmode="decimal" placeholder=""></div>
     </div>
@@ -331,7 +333,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="rows" id="f_pilots"></div>
     <button class="btn sm addbtn" id="addpilot" style="margin-top:8px;">+ Pilot</button>
 
-    <div class="formhead">Flight attendants · first + last (last is captured, not shown)</div>
+    <div class="formhead">Flight attendants · first + last + emp #</div>
     <div class="rows" id="f_fas"></div>
     <button class="btn sm addbtn" id="addfa" style="margin-top:8px;">+ F/A</button>
 
@@ -381,8 +383,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
             <div class="callsign" id="c_call">DAL---</div>
           </div>
           <div class="heavy" id="c_heavy" style="display:none;">HEAVY</div>
-          <div class="atis" id="c_atis">ATIS <b>—</b></div>
-          <div class="paxline">PAX <b id="c_pax">—</b></div>
+          <div class="atispax" id="c_atispax">
+            <div class="atis" id="c_atis">ATIS <b>—</b></div>
+            <div class="paxline">PAX <b id="c_pax">—</b></div>
+          </div>
         </div>
         <div class="col-fuel">
           <div class="lbl">Block</div><div class="fuel" id="c_block">—</div>
@@ -424,6 +428,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 </section>
 
 <!-- ============ INFO MODAL ============ -->
+<div id="premodal">
+  <div class="sheet" style="max-width:460px;">
+    <h3>Manual entries</h3>
+    <div class="ibody">
+      <div class="grid">
+        <div class="fld"><label>Oxygen (psi)</label><input id="pre_o2" inputmode="numeric" maxlength="4" placeholder="blank if unknown"></div>
+        <div class="fld"><label>Current ATIS</label><input id="pre_atis" autocapitalize="characters" maxlength="1" placeholder=""></div>
+        <div class="fld"><label>Safe word</label><input id="pre_safe" autocapitalize="characters" placeholder="blank if unknown"></div>
+      </div>
+      <p class="note" style="margin-top:12px;">Not on the release — enter what you have, or leave blank and add later on EDIT.</p>
+    </div>
+    <div class="bar" style="margin-top:16px;"><button class="btn go" id="pre_done" style="flex:1;">DONE</button></div>
+  </div>
+</div>
+
 <div id="infomodal">
   <div class="sheet">
     <h3 id="im_title">—</h3>
@@ -507,12 +526,12 @@ function melRow(v){var r=document.createElement('div');r.className='row';
   r.innerHTML='<input class="grow mel" autocapitalize="characters" placeholder="S53-00-03"><button class="iconbtn rm" type="button" aria-label="remove">×</button>';
   r.querySelector('.mel').value=v||'';r.querySelector('.rm').onclick=function(){r.remove();};return r;}
 function pilotRow(p){p=p||{};var r=document.createElement('div');r.className='row';
-  r.innerHTML='<input class="role" autocapitalize="characters" placeholder="CA" style="flex:0 0 60px"><input class="grow pname" autocapitalize="characters" placeholder="LUCE"><input class="emp pemp" inputmode="numeric" maxlength="6" placeholder="979823"><button class="iconbtn rm" type="button" aria-label="remove">×</button>';
-  r.querySelector('.role').value=p.role||'';r.querySelector('.pname').value=p.name||'';r.querySelector('.pemp').value=p.emp||'';
+  r.innerHTML='<input class="role" autocapitalize="characters" placeholder="CA" style="flex:0 0 56px"><input class="grow pfirst" autocapitalize="characters" placeholder="WILLIAM"><input class="grow plast" autocapitalize="characters" placeholder="LUCE"><input class="emp pemp" inputmode="numeric" maxlength="6" placeholder="979823"><button class="iconbtn rm" type="button" aria-label="remove">×</button>';
+  r.querySelector('.role').value=p.role||'';r.querySelector('.pfirst').value=p.first||'';r.querySelector('.plast').value=p.last||p.name||'';r.querySelector('.pemp').value=p.emp||'';
   r.querySelector('.rm').onclick=function(){r.remove();};return r;}
 function faRow(f){f=f||{};var r=document.createElement('div');r.className='row';
-  r.innerHTML='<input class="fpos" autocapitalize="characters" maxlength="2" placeholder="A" style="flex:0 0 52px"><input class="grow ffirst" autocapitalize="characters" placeholder="MIKAYLA"><input class="grow flast" autocapitalize="characters" placeholder="HALFHILL"><button class="iconbtn rm" type="button" aria-label="remove">×</button>';
-  r.querySelector('.fpos').value=f.pos||'';r.querySelector('.ffirst').value=f.first||'';r.querySelector('.flast').value=f.last||'';
+  r.innerHTML='<input class="fpos" autocapitalize="characters" maxlength="2" placeholder="A" style="flex:0 0 48px"><input class="grow ffirst" autocapitalize="characters" placeholder="MIKAYLA"><input class="grow flast" autocapitalize="characters" placeholder="HALFHILL"><input class="emp femp" inputmode="numeric" maxlength="6" placeholder="800807"><button class="iconbtn rm" type="button" aria-label="remove">×</button>';
+  r.querySelector('.fpos').value=f.pos||'';r.querySelector('.ffirst').value=f.first||'';r.querySelector('.flast').value=f.last||'';r.querySelector('.femp').value=f.emp||'';
   r.querySelector('.rm').onclick=function(){r.remove();};return r;}
 $('addmel').onclick=function(){$('f_mels').appendChild(melRow(''));};
 $('addpilot').onclick=function(){$('f_pilots').appendChild(pilotRow({}));};
@@ -556,8 +575,8 @@ function readForm(){
     o2:($('f_o2').value||'').replace(/\D/g,''),atis:($('f_atis').value||'').toUpperCase().trim(),safe:($('f_safe').value||'').toUpperCase().trim(),
     latt:($('f_latt').value||'').replace(/\D/g,''),lattx:($('f_lattx').value||'').replace(/\D/g,''),
     mels:[].map.call(document.querySelectorAll('#f_mels .mel'),function(i){return i.value.toUpperCase().trim();}).filter(Boolean),
-    pilots:[].map.call(document.querySelectorAll('#f_pilots .row'),function(r){return {role:r.querySelector('.role').value.toUpperCase().trim(),name:r.querySelector('.pname').value.toUpperCase().trim(),emp:r.querySelector('.pemp').value.replace(/\D/g,'')};}).filter(function(p){return p.name||p.emp;}),
-    fas:[].map.call(document.querySelectorAll('#f_fas .row'),function(r){return {pos:r.querySelector('.fpos').value.toUpperCase().trim(),first:r.querySelector('.ffirst').value.toUpperCase().trim(),last:r.querySelector('.flast').value.toUpperCase().trim()};}).filter(function(f){return f.first||f.last;})
+    pilots:[].map.call(document.querySelectorAll('#f_pilots .row'),function(r){var ln=r.querySelector('.plast').value.toUpperCase().trim();return {role:r.querySelector('.role').value.toUpperCase().trim(),first:r.querySelector('.pfirst').value.toUpperCase().trim(),last:ln,name:ln,emp:r.querySelector('.pemp').value.replace(/\D/g,'')};}).filter(function(p){return p.first||p.last||p.emp;}),
+    fas:[].map.call(document.querySelectorAll('#f_fas .row'),function(r){return {pos:r.querySelector('.fpos').value.toUpperCase().trim(),first:r.querySelector('.ffirst').value.toUpperCase().trim(),last:r.querySelector('.flast').value.toUpperCase().trim(),emp:r.querySelector('.femp').value.replace(/\D/g,'')};}).filter(function(f){return f.first||f.last||f.emp;})
   };
 }
 
@@ -605,7 +624,7 @@ function renderCard(d){
   if(d.safe){sw.textContent='•••• TAP';sw.dataset.word=d.safe;sw.disabled=false;sw.style.opacity='1';}
   else{sw.textContent='—';sw.dataset.word='';sw.disabled=true;sw.style.opacity='.5';}
   /* crew */
-  $('c_pilots').innerHTML=(d.pilots&&d.pilots.length)?d.pilots.map(function(p){return (p.role?p.role+' ':'')+p.name+(p.emp?' <span class="emp">'+p.emp+'</span>':'');}).join(' · '):'—';
+  $('c_pilots').innerHTML=(d.pilots&&d.pilots.length)?d.pilots.map(function(p){return (p.role?p.role+' ':'')+(p.last||p.name||'')+(p.emp?' <span class="emp">'+p.emp+'</span>':'');}).join(' · '):'—';
   $('c_fas').textContent=(d.fas&&d.fas.length)?d.fas.map(function(f){return (f.pos?f.pos+') ':'')+(f.first||f.last);}).join('  ·  '):'—';
 }
 
@@ -620,10 +639,11 @@ $('c_safebtn').addEventListener('click',function(){
 function fmtPhone(p){p=(p||'').replace(/\D/g,'');return p.length===10?(p.slice(0,3)+'-'+p.slice(3,6)+'-'+p.slice(6)):p;}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
 var IM_COPY='';
-function openInfo(title,html,copy){
+function openInfo(title,html,copy,wide){
   IM_COPY=copy||'';
   $('im_title').textContent=title;
   $('im_body').innerHTML=html||'<div class="iempty">\u2014 none published \u2014</div>';
+  var sh=$('infomodal').querySelector('.sheet');if(sh)sh.classList.toggle('wide',!!wide);
   $('infomodal').classList.add('on');$('im_body').scrollTop=0;
 }
 $('im_close').addEventListener('click',function(){$('infomodal').classList.remove('on');});
@@ -669,7 +689,7 @@ $('dispbtn').addEventListener('click',function(){
   if(rows)html+='<div class="kvlist">'+rows+'</div>';
   if(CURRENT.dispRemarks){html+='<div class="subhead">Remarks</div>'+remarksHTML(CURRENT.dispRemarks);copy+='\nREMARKS\n'+CURRENT.dispRemarks;}
   if(!html)html='<div class="iempty">\u2014 no dispatcher info \u2014</div>';
-  openInfo('Dispatcher',html,copy.trim());
+  openInfo('Dispatcher',html,copy.trim(),true);
 });
 $('rptbtn').addEventListener('click',function(){
   var p=CURRENT.rptpts||[];
@@ -686,7 +706,7 @@ $('arptbtn').addEventListener('click',function(){
   openInfo('Remarks',remarksHTML(combined),combined.trim());
 });
 (function(){
-  var el=$('c_atis'),last=0;
+  var el=$('c_atispax'),last=0;
   function cycle(){
     var cur=(CURRENT.atis||'').trim().toUpperCase();
     var code=(cur.length===1&&cur>='A'&&cur<='Z')?cur:'';
@@ -710,6 +730,22 @@ function lattTarget(hhmm){
   while(now-t>18*H)t.setUTCDate(t.getUTCDate()+1);
   return t;
 }
+function zTarget(hhmm,day,mon){
+  hhmm=(hhmm||'').replace(/\D/g,'');if(hhmm.length<3)return null;
+  hhmm=('0000'+hhmm).slice(-4);var h=+hhmm.slice(0,2),mm=+hhmm.slice(2);
+  if(h>23||mm>59)return null;
+  var now=new Date(),DAY=864e5;
+  if(day&&mon!==''&&mon!=null&&!isNaN(+mon)){
+    var y=now.getUTCFullYear(),t=new Date(Date.UTC(y,+mon,+day,h,mm,0));
+    if(t-now<-120*DAY)t=new Date(Date.UTC(y+1,+mon,+day,h,mm,0));
+    else if(t-now>245*DAY)t=new Date(Date.UTC(y-1,+mon,+day,h,mm,0));
+    return t;
+  }
+  var H=36e5,t2=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),h,mm,0));
+  while(t2-now>18*H)t2.setUTCDate(t2.getUTCDate()-1);
+  while(now-t2>18*H)t2.setUTCDate(t2.getUTCDate()+1);
+  return t2;
+}
 function fmtZ(hhmm){return ('0000'+(hhmm||'').replace(/\D/g,'')).slice(-4)+'Z';}
 function fmtRemain(ms){var neg=ms<0,s=Math.floor(Math.abs(ms)/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
   var out=h>=1?(h+':'+('0'+m).slice(-2)):(('0'+m).slice(-2)+':'+('0'+ss).slice(-2));return (neg?'-':'')+out;}
@@ -718,15 +754,15 @@ function startTick(d){
   var clk=$('c_clock'),sub=$('c_117sub');
   function upd(){
     var pe=$('c_push');
-    if(pe){var pt=lattTarget(d.push),pr=pt?(pt-new Date()):null;
+    if(pe){var pt=zTarget(d.push,d.dateDay,d.dateMon),pr=pt?(pt-new Date()):null;
       if(pt&&pr>0){pe.style.display='';pe.className='pushpill'+(pr/60000<=10?' soon':'');pe.innerHTML='PUSH <b>'+fmtZ(d.push)+'</b> · '+fmtRemain(pr);}
       else pe.style.display='none';}
-    var base=lattTarget(d.latt);
+    var base=zTarget(d.latt,d.lattDay,d.dateMon);
     if(!base){clk.textContent='--:--';clk.className='clock';sub.innerHTML='enter LATT';return;}
     var now=new Date(),rem=base-now,minLeft=rem/60000;
     clk.className='clock';
     if(rem<0){clk.textContent='PAST';clk.classList.add('is-red','flash');
-      var ex=lattTarget(d.lattx);
+      var ex=zTarget(d.lattx,d.lattxDay,d.dateMon);
       sub.innerHTML=(ex&&ex-now>0)?('LATT <b>'+fmtZ(d.latt)+'</b> passed · ext '+fmtRemain(ex-now)+' to <b>'+fmtZ(d.lattx)+'</b>'):('LATT <b>'+fmtZ(d.latt)+'</b> passed');
       return;}
     clk.textContent=fmtRemain(rem);
@@ -748,13 +784,16 @@ window.addEventListener('online',netUpd);window.addEventListener('offline',netUp
 
 function num1k(s){if(!s)return'';var n=parseInt(s,10);if(isNaN(n))return'';return (n/1000).toFixed(1);}
 function rx(re,t,i){var x=re.exec(t);return x?x[i==null?1:i]:'';}
+function monIdx(s){return ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf((s||'').toUpperCase());}
 function parseRelease(t){
   t=(t||'').replace(/\r/g,'');
-  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',dist:'',
+  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
     block:'',minto:'',land:'',rsv:'',route:'',sid:'',star:'',elev:'',altn:'',altf:'',
     togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:''};
   var fl=/ATC\/FMS FLT NO\s*-\s*[A-Z]{2,3}\s*(\d+)/.exec(t)||/\bFLT\s+0*(\d+)\//.exec(t)||/\bDAL\s+0*(\d+)\//.exec(t);
   if(fl)d.flt=fl[1];
+  var rd=/\b\d{3,4}\/(\d{2})([A-Z]{3})/.exec(t);
+  if(rd){d.dateDay=+rd[1];var mi=monIdx(rd[2]);if(mi>=0)d.dateMon=mi;}
   var td=/SHIP\s+\d+\s+B(75\d|76\d)/.exec(t);
   if(td)d.type=td[1].charAt(0)==='6'?'767':'757';
   else if(/B76\d/.test(t)||/\b767\b/.test(t))d.type='767';
@@ -765,8 +804,14 @@ function parseRelease(t){
   d.agate=rx(/SCHEDULED GATE\s+([A-Z]?\d+[A-Z]?)/,t);
   var st=/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z-\d{3,4}L\s*-\s*[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z/.exec(t);
   if(st){d.push=('0000'+st[1]).slice(-4);d.schedin=('0000'+st[2]).slice(-4);}
-  var dm2=/(?:GND|AIR|GC|TOTAL)\s*(?:AIR|GND)?\s*DIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})/i.exec(t)||/\bDIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})\s*NM/i.exec(t)||/\b(\d{3,5})\s*NM\b/.exec(t);
-  if(dm2)d.dist=dm2[1];
+  var dist='';
+  var dl=/(?:GND|AIR|GC|GROUND|TOTAL|TTL)\s*(?:AIR|GND|GROUND)?\s*DIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})/i.exec(t)||/\bDIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})\b/i.exec(t);
+  if(dl)dist=dl[1];
+  else{var vals=[],x,r1=/\bN(?:M|AM)\s+(\d{3,5})\b/gi,r2=/\b(\d{3,5})\s*N(?:M|AM)\b/gi;
+    while((x=r1.exec(t)))vals.push(+x[1]);
+    while((x=r2.exec(t)))vals.push(+x[1]);
+    if(vals.length){var mx=Math.max.apply(null,vals);if(mx>=200)dist=String(mx);}}
+  d.dist=dist;
   d.block=num1k(rx(/BLOCK FUEL\s+(\d{4,6})/,t));
   d.minto=num1k(rx(/MIN FUEL FOR T\/O\s+(\d{4,6})/,t));
   d.land =num1k(rx(/PLANNED LNDG FUEL AT DEST\s*\*+\s*(\d{3,6})/,t));
@@ -784,15 +829,15 @@ function parseRelease(t){
   if(d.route){var tk=d.route.split(' ');
     if(tk.length>2){if(/^[A-Z]{2,}\d[A-Z]?$/.test(tk[1]))d.sid=tk[1];
       var l2=tk[tk.length-2];if(/^[A-Z]{2,}\d[A-Z]?$/.test(l2))d.star=l2;}}
-  d.latt =rx(/MAX FDP LIMIT:\s*\d+\/(\d{4})Z/,t);
-  d.lattx=rx(/MAX FDP LIMIT WITH EXTENSION APPLIED:\s*\d+\/(\d{4})Z/,t);
+  var ltm=/MAX FDP LIMIT:\s*(\d+)\/(\d{4})Z/.exec(t);if(ltm){d.lattDay=+ltm[1];d.latt=ltm[2];}
+  var lxm=/MAX FDP LIMIT WITH EXTENSION APPLIED:\s*(\d+)\/(\d{4})Z/.exec(t);if(lxm){d.lattxDay=+lxm[1];d.lattx=lxm[2];}
   var mel,mre=/^\s*\d{2}\s+([A-Z]\d{2}-\d{2}-\d{2})\s+-\s/gm;
   while((mel=mre.exec(t)))d.mels.push(mel[1]);
-  var p,pre=/PLT\s+([A-Z])\s+(\d{6,7})\s+([A-Z][A-Z]+),/g;
+  var p,pre=/PLT\s+([A-Z])\s+(\d{6,7})\s+([A-Z][A-Z]+),\s*([A-Z][A-Z ]*?)\s*(?:\n|$|\s{2,})/g;
   while((p=pre.exec(t))){var role=p[1]==='A'?'CA':(p[1]==='B'?'FO':p[1]);
-    d.pilots.push({role:role,name:p[3],emp:p[2].slice(-6)});}
-  var f,fre=/F\/A\s+([A-Z])\s+\d{6,7}\s+([A-Z]+)\s+([A-Z][A-Z ]*?)(?:-{2,}|\s{2,}|$)/gm;
-  while((f=fre.exec(t)))d.fas.push({pos:f[1],first:f[2],last:f[3].trim()});
+    d.pilots.push({role:role,last:p[3],name:p[3],first:(p[4]||'').trim(),emp:p[2].slice(-6)});}
+  var f,fre=/F\/A\s+([A-Z])\s+(\d{6,7})\s+([A-Z]+)\s+([A-Z][A-Z ]*?)(?:-{2,}|\s{2,}|$)/gm;
+  while((f=fre.exec(t)))d.fas.push({pos:f[1],emp:f[2].slice(-6),first:f[3],last:f[4].trim()});
   var dm=/([A-Z]+-[A-Z]+)\s+DESK-(\d+)\s+PHONE-(\d+)(?:\*(\d+))?/.exec(t);
   if(dm){d.dispName=dm[1].replace(/-/g,' ');d.dispDesk=dm[2];d.dispPhone=dm[3];d.dispExt=dm[4]||'';}
   var dr=/DISPATCHER REMARKS\s*\n-+\n([\s\S]*?)\n\s*-{5,}/.exec(t);
@@ -802,9 +847,9 @@ function parseRelease(t){
   var rl=t.split('\n'),rp=[];
   for(var ri=0;ri<rl.length;ri++){if(/DAL POSN RPT/.test(rl[ri])){for(var rj=ri-1;rj>=0&&rj>ri-6;rj--){var fm=/^([A-Z0-9]{3,7})\s+[WE]\d{5}/.exec(rl[rj]);if(fm){rp.push(fm[1]);break;}}}}
   d.rptpts=rp;
-  var ar=/DELTA AIRPORT REMARKS([\s\S]*?)(?:OVERFLT AUTHORIZATIONS|CDR SUMMARY|WAYPOINT NOTAMS|GOVERNMENT NOTAMS|END OF)/.exec(t);
+  var ar=/DELTA AIRPORT REMARKS([\s\S]*?)(?:AIRPORT PAIR NOTAM|CITY PAIR NOTAM|OVERFLT AUTHORIZATIONS|CDR SUMMARY|WAYPOINT NOTAMS|GOVERNMENT NOTAMS|\bNOTAMS\b|END OF)/.exec(t);
   if(ar)d.arptRemarks=('AIRPORT REMARKS\n'+ar[1]).replace(/^-{5,}$/gm,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
-  var cpr=/(?:DELTA )?CITY PAIR REMARKS([\s\S]*?)(?:DELTA (?:AIRPORT|ALTERNATE)|DISPATCHER REMARKS|OVERFLT AUTHOR|CDR SUMMARY|WAYPOINT NOTAMS|GOVERNMENT NOTAMS|END OF)/.exec(t);
+  var cpr=/(?:DELTA )?CITY PAIR REMARKS([\s\S]*?)(?:DELTA (?:AIRPORT|ALTERNATE)|DISPATCHER REMARKS|AIRPORT PAIR NOTAM|CITY PAIR NOTAM|OVERFLT AUTHOR|CDR SUMMARY|WAYPOINT NOTAMS|GOVERNMENT NOTAMS|\bNOTAMS\b|END OF)/.exec(t);
   if(cpr)d.cityRemarks=cpr[1].replace(/^-{5,}$/gm,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
   return d;
 }
@@ -817,13 +862,21 @@ $('edit').addEventListener('click',function(){var d=loadJSON(DATA_KEY,null);if(d
 $('topaste').addEventListener('click',showPaste);
 $('pasteback').addEventListener('click',function(){var d=loadJSON(DATA_KEY,null);if(d)showCard(d);});
 $('gear3').addEventListener('click',openSettings);
+var PENDING=null;
+function openPre(d){PENDING=d;$('pre_o2').value=d.o2||'';$('pre_atis').value=d.atis||'';$('pre_safe').value=d.safe||'';$('premodal').classList.add('on');setTimeout(function(){try{$('pre_o2').focus();}catch(e){}},60);}
+$('pre_done').addEventListener('click',function(){var d=PENDING||{};
+  d.o2=($('pre_o2').value||'').replace(/\D/g,'');
+  d.atis=($('pre_atis').value||'').toUpperCase().trim().slice(0,1);
+  d.safe=($('pre_safe').value||'').toUpperCase().trim();
+  localStorage.setItem(DATA_KEY,JSON.stringify(d));fillForm(d);$('premodal').classList.remove('on');showCard(d);});
+$('premodal').addEventListener('click',function(e){if(e.target===this)$('pre_done').click();});
 $('parsebtn').addEventListener('click',function(){
   var txt=$('pastebox').value||'';
   if(txt.trim().length<40){$('parsemsg').textContent='Paste the full release first.';return;}
   var d=parseRelease(txt);
   if(!d.flt&&!d.orig){$('parsemsg').textContent="Couldn't read that \u2014 make sure it's the full dispatch release text.";return;}
   localStorage.setItem(DATA_KEY,JSON.stringify(d));
-  fillForm(d);$('parsemsg').textContent='';showCard(d);
+  $('parsemsg').textContent='';openPre(d);
 });
 
 $('clearall').addEventListener('click',function(){if(confirm('Clear all card data on this device?')){localStorage.removeItem(DATA_KEY);fillForm({});window.scrollTo(0,0);}});
