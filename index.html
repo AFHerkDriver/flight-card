@@ -101,7 +101,6 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .pushpill{width:fit-content;margin:0 auto 8px;font-family:var(--mono);font-size:clamp(12px,2.5vw,15px);color:var(--cyan);background:var(--panel2);border:1px solid var(--line2);border-radius:999px;padding:5px 14px;text-align:center;}
 .pushpill.soon{color:var(--amber);border-color:var(--amber);}
 .pushpill b{color:var(--txt);font-weight:600;}
-.tland{font-family:var(--mono);font-size:11px;color:var(--txt3);margin-top:2px;}
 .gate{font-family:var(--mono);font-size:clamp(12px,2.5vw,15px);color:var(--txt2);}
 .gate b{color:var(--txt);font-weight:600;}
 .ct-l{justify-self:start;text-align:left;}
@@ -121,7 +120,7 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .btncol{display:flex;flex-direction:column;gap:8px;min-width:128px;}
 .col-nav,.col-fuel{min-width:0;}
 .o2lbl{font-family:var(--mono);font-size:11px;letter-spacing:.6px;color:var(--txt3);}
-.o2{font-family:var(--mono);font-size:clamp(22px,4.6vw,28px);font-weight:600;color:var(--cyan);margin-bottom:4px;}
+.o2{font-family:var(--mono);font-size:clamp(22px,4.6vw,28px);font-weight:600;color:var(--blue);margin-bottom:4px;}
 .callrow{display:flex;align-items:center;justify-content:center;gap:clamp(8px,1.6vw,16px);}
 .dwidget{height:clamp(30px,7.2vw,58px);width:auto;flex:0 0 auto;display:block;cursor:pointer;}
 .dwidget.tapped{opacity:.45;}
@@ -365,7 +364,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
         <div class="apt ct-r" id="c_dest">—</div>
         <div class="gate ct-l">GATE <b id="c_dgate">—</b></div>
         <button class="ete ct-c etetog" id="c_ete" type="button" data-mode="ete">—</button>
-        <div class="gate ct-r">GATE <b id="c_agate">—</b><div class="tland" id="c_landt"></div></div>
+        <div class="gate ct-r">GATE <b id="c_agate">—</b></div>
       </div>
 
       <div class="pushpill" id="c_push" style="display:none;">—</div>
@@ -592,7 +591,6 @@ function renderCard(d){
   var _dist=d.dist?(d.dist+' NM'):'— NM';
   var ee=$('c_ete');ee.dataset.ete=_ete;ee.dataset.dist=_dist;
   ee.textContent=(ee.dataset.mode==='dist')?_dist:_ete;
-  var lt=$('c_landt');if(lt)lt.textContent=d.schedin?('LAND ~'+d.schedin+'Z'):'';
   $('c_dgate').textContent=d.dgate||'—';
   $('c_agate').textContent=d.agate||'—';
   $('c_sid').textContent=d.sid||'—';
@@ -674,7 +672,7 @@ $('routebtn').addEventListener('click',function(){
   if(r){
     var sid=(CURRENT.sid||'').trim(),star=(CURRENT.star||'').trim();
     var og=(CURRENT.orig||'').trim(),ds=(CURRENT.dest||'').trim();
-    var toks=r.split(/\s+/).filter(Boolean);
+    var toks=r.split(/\s+/).filter(function(x){return x&&x!=='DCT';});
     html+='<div class="chips">'+toks.map(function(t,i){
       var cls='chip';
       if(t==='DCT')cls='chip dct';
