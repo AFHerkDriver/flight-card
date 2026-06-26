@@ -829,7 +829,9 @@ $('dispbtn').addEventListener('click',function(){
   var rows='';
   if(CURRENT.dispDesk){rows+='<div class="kv"><div class="k">Desk</div><div class="v">'+esc(CURRENT.dispDesk)+'</div></div>';copy+='DESK '+CURRENT.dispDesk+'\n';}
   if(CURRENT.rls){rows+='<div class="kv"><div class="k">Release</div><div class="v">'+esc(CURRENT.rls)+'</div></div>';copy+='RLS '+CURRENT.rls+'\n';}
-  if(CURRENT.dispPhone){var ph=fmtPhone(CURRENT.dispPhone)+(CURRENT.dispExt?(' x'+CURRENT.dispExt):'');rows+='<div class="kv"><div class="k">Phone</div><div class="v"><span class="kvcopy" data-copy="'+esc(ph)+'">'+esc(ph)+'</span></div></div>';copy+=ph+'\n';}
+  if(CURRENT.dispPhone){var ph=fmtPhone(CURRENT.dispPhone)+(CURRENT.dispExt?(' x'+CURRENT.dispExt):'');
+    var dial=(CURRENT.dispPhone||'').replace(/\D/g,'')+(CURRENT.dispExt?(',,,'+(CURRENT.dispExt||'').replace(/\D/g,'')):'');
+    rows+='<div class="kv"><div class="k">Phone</div><div class="v"><span class="kvcopy" data-copy="'+esc(dial)+'">'+esc(ph)+'</span></div></div>';copy+=dial+'\n';}
   if(rows)html+='<div class="kvlist">'+rows+'</div>';
   if(CURRENT.dispRemarks){html+='<div class="subhead">Remarks</div>'+remarksHTML(CURRENT.dispRemarks);copy+='\nREMARKS\n'+CURRENT.dispRemarks;}
   if(!html)html='<div class="iempty">\u2014 no dispatcher info \u2014</div>';
