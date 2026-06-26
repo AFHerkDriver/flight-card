@@ -492,7 +492,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="srow"><span class="k">Dim (sub-min)</span><input type="range" id="s_dim" min="0" max="0.8" step="0.05" value="0"></div>
     <div class="srow"><span class="k">In-flight mode</span><button class="toggle" id="s_inflight" aria-pressed="false">OFF</button></div>
     <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">AUTO</span></div>
-    <div class="setver">Flight Card · Version 2.0</div>
+    <div class="setver">Flight Card · Version 2.1</div>
     <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">DONE</button></div>
   </div>
 </div>
@@ -1049,7 +1049,36 @@ $('parsebtn').addEventListener('click',function(){
 $('clearall').addEventListener('click',function(){if(confirm('Clear all card data on this device?')){localStorage.removeItem(DATA_KEY);fillForm({});window.scrollTo(0,0);}});
 
 applyTheme();syncSettingsUI();netUpd();
-(function(){var d=loadJSON(DATA_KEY,null);if(d&&(d.flt||d.orig||d.dest)){fillForm(d);showCard(d);}else{fillForm({});showPaste();}})();
+(function () {
+  var BRIDGE_URL = '/__afhd_bridge_release__', BRIDGE_TS = 'flightcard_bridge_ts';
+  function bridgeRead() {
+    if (!('caches' in window)) return Promise.resolve(null);
+    return caches.open('afhd-bridge')
+      .then(function (c) { return c.match(BRIDGE_URL); })
+      .then(function (res) {
+        if (!res) return null;
+        var ts = parseInt(res.headers.get('x-afhd-ts') || '0', 10);
+        return res.text().then(function (t) { return { text: t, ts: ts }; });
+      }).catch(function () { return null; });
+  }
+  function bootNormal() {
+    var d = loadJSON(DATA_KEY, null);
+    if (d && (d.flt || d.orig || d.dest)) { fillForm(d); showCard(d); }
+    else { fillForm({}); showPaste(); }
+  }
+  bridgeRead().then(function (b) {
+    var last = parseInt(localStorage.getItem(BRIDGE_TS) || '0', 10);
+    if (b && b.text && b.ts > last) {
+      var nd = parseRelease(b.text);
+      if (nd && (nd.flt || nd.orig)) {
+        try { localStorage.setItem(BRIDGE_TS, String(b.ts)); } catch (e) {}
+        try { localStorage.setItem(DATA_KEY, JSON.stringify(nd)); } catch (e) {}
+        fillForm(nd); showCard(nd); return;
+      }
+    }
+    bootNormal();
+  }).catch(bootNormal);
+})();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 </script>
 </body>

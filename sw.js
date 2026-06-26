@@ -1,5 +1,5 @@
 /* Flight Card service worker */
-var CACHE = 'flightcard-v38';
+var CACHE = 'flightcard-v40';
 var CORE = ['./', './index.html', './manifest.json'];
 var ICONS = ['./icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png', './favicon.png'];
 
@@ -19,7 +19,7 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.map(function (k) { if (k !== CACHE) return caches.delete(k); }));
+      return Promise.all(keys.map(function (k) { if (k !== CACHE && k !== 'afhd-bridge') return caches.delete(k); }));
     }).then(function () { return self.clients.claim(); })
   );
 });
@@ -28,6 +28,7 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
   if (new URL(req.url).origin !== self.location.origin) return; /* let cross-origin (METAR) bypass SW */
+  if (new URL(req.url).pathname === '/__afhd_bridge_release__') return; /* never fetch the bridge key */
   var isNav = req.mode === 'navigate' ||
     (req.headers.get('accept') || '').indexOf('text/html') !== -1;
 
