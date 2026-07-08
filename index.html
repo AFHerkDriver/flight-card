@@ -340,6 +340,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <div class="fld"><label>LATT w/ extension (HHMM Z)</label><input id="f_lattx" inputmode="numeric" maxlength="4" placeholder=""></div>
     </div>
 
+    <div class="formhead">Flight times (backup)</div>
+    <div class="grid">
+      <div class="fld"><label>Off / airborne (HHMM Z)</label><input id="f_off" inputmode="numeric" maxlength="4" placeholder=""></div>
+      <div class="fld"><label>On / landed (HHMM Z)</label><input id="f_on" inputmode="numeric" maxlength="4" placeholder=""></div>
+    </div>
+    <div class="note">Sets the off/on times (Zulu) for the flight-time clock — handy while calibrating the auto-detect. Editing nudges the time on the captured date; blank clears it. The tap on the timer and auto wheels-off also set these.</div>
+
     <div class="formhead">MELs</div>
     <div class="rows" id="f_mels"></div>
     <button class="btn sm addbtn" id="addmel" style="margin-top:8px;">+ MEL</button>
@@ -650,6 +657,7 @@ function fillForm(d){
   $('f_togw').value=d.togw||'';$('f_ldgw').value=d.ldgw||'';$('f_pax').value=d.pax||'';$('f_hold').value=d.hold||'';
   $('f_o2').value=d.o2||'';$('f_atis').value=d.atis||'';$('f_safe').value=d.safe||'';
   $('f_latt').value=d.latt||'';$('f_lattx').value=d.lattx||'';
+  $('f_off').value=d.airborne?zHHMM(d.airborne):'';$('f_on').value=d.landed?zHHMM(d.landed):'';
   var mc=$('f_mels');mc.innerHTML='';(d.mels&&d.mels.length?d.mels:['']).forEach(function(v){mc.appendChild(melRow(v));});
   var pc=$('f_pilots');pc.innerHTML='';(d.pilots&&d.pilots.length?d.pilots:[{role:'CA'},{role:'FO'}]).forEach(function(p){pc.appendChild(pilotRow(p));});
   var fc=$('f_fas');fc.innerHTML='';(d.fas&&d.fas.length?d.fas:[{pos:'A'},{pos:'B'},{pos:'C'},{pos:'D'}]).forEach(function(f){fc.appendChild(faRow(f));});
@@ -1112,7 +1120,12 @@ function show(id){['paste','form','cardscreen'].forEach(function(s){$(s).classLi
 function showCard(d){renderCard(d);startTick(d);show('cardscreen');window.scrollTo(0,0);reqWake();netUpd();if(settings.autoto)armAuto();}
 function showForm(){if(tickTimer)clearInterval(tickTimer);relWake();show('form');window.scrollTo(0,0);}
 function showPaste(){if(tickTimer)clearInterval(tickTimer);relWake();disarmAuto();$('pasteback').style.display=loadJSON(DATA_KEY,null)?'':'none';show('paste');window.scrollTo(0,0);}
-$('build').addEventListener('click',function(){var prev=loadJSON(DATA_KEY,{});var d=Object.assign({},prev,readForm());localStorage.setItem(DATA_KEY,JSON.stringify(d));showCard(d);});
+function hhmmToTs(hhmm,anchorTs,notBefore){var hh=+hhmm.slice(0,2),mm=+hhmm.slice(2);var b=anchorTs?new Date(anchorTs):new Date();var t=Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate(),hh,mm,0);if(notBefore&&t<notBefore)t+=864e5;return t;}
+$('build').addEventListener('click',function(){var prev=loadJSON(DATA_KEY,{});var d=Object.assign({},prev,readForm());
+  var offv=($('f_off').value||'').replace(/\D/g,''),onv=($('f_on').value||'').replace(/\D/g,'');
+  d.airborne=(offv.length===4)?hhmmToTs(offv,prev.airborne):0;
+  d.landed=(onv.length===4)?hhmmToTs(onv,prev.landed||prev.airborne,d.airborne):0;
+  localStorage.setItem(DATA_KEY,JSON.stringify(d));showCard(d);});
 $('edit').addEventListener('click',function(){var d=loadJSON(DATA_KEY,null);if(d)fillForm(d);showForm();});
 $('topaste').addEventListener('click',showPaste);
 $('pasteclear').addEventListener('click',function(){$('pastebox').value='';var pm=$('parsemsg');if(pm)pm.textContent='';$('pastebox').focus();});
