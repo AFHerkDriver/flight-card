@@ -956,9 +956,9 @@ function parseRelease(t){
   if(arrH){var ad=d.dateDay||new Date().getUTCDate();if(depH&&parseInt(arrH,10)<parseInt(depH,10))ad=ad+1;d.arrDDHHMM=('0'+ad).slice(-2)+arrH;}
   var rd=/\b\d{3,4}\/(\d{2})([A-Z]{3})/.exec(t);
   if(rd){d.dateDay=+rd[1];var mi=monIdx(rd[2]);if(mi>=0)d.dateMon=mi;}
-  var td=/SHIP\s+\d+\s+B(75\d|76\d)/.exec(t);
-  if(td)d.type=td[1].charAt(0)==='6'?'767':'757';
-  else if(/B76\d/.test(t)||/\b767\b/.test(t))d.type='767';
+  var td=/\bB(7[56]\d)\/[JHML]\b/.exec(t)||/SHIP\s+\d+\s+B(75\d|76\d)/.exec(t);
+  if(td)d.type=(td[1].charAt(1)==='6')?'767':'757';
+  else if(/\bB76\d\b/.test(t)||/\b767\b/.test(t))d.type='767';
   var od=/[A-Z]{3}\/([A-Z]{4})\/[A-Z][A-Z .']*?\s*-\s*[A-Z]{3}\/([A-Z]{4})\//.exec(t)||/SCHEDULED\s+[A-Z]{3}\/([A-Z]{4})\s+\d{3,4}Z-\d{3,4}L\s*-\s*[A-Z]{3}\/([A-Z]{4})/.exec(t);
   if(od){d.orig=od[1];d.dest=od[2];}
   var ete=/ETE[-:\s]+(\d{1,2}):(\d{2})/.exec(t);
@@ -967,9 +967,10 @@ function parseRelease(t){
   var st=/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z-\d{3,4}L\s*-\s*[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z/.exec(t);
   if(st){d.push=('0000'+st[1]).slice(-4);d.schedin=('0000'+st[2]).slice(-4);}
   var dist='';
-  var dl=/(?:GND|AIR|GC|GROUND|TOTAL|TTL)\s*(?:AIR|GND|GROUND)?\s*DIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})/i.exec(t)||/\bDIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})\b/i.exec(t);
-  if(dl)dist=dl[1];
-  else{var vals=[],x,r1=/\bN(?:M|AM)\s+(\d{3,5})\b/gi,r2=/\b(\d{3,5})\s*N(?:M|AM)\b/gi;
+  var dnm=/\bNM\s+(\d{3,5})\s+TAS\b/i.exec(t)||/\bETE[-:\s][^\n]*?\bNM\s+(\d{3,5})\b/i.exec(t);
+  if(dnm)dist=dnm[1];
+  if(!dist){var dl=/(?:GND|AIR|GC|GROUND|TOTAL|TTL)\s*(?:AIR|GND|GROUND)?\s*DIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})/i.exec(t)||/\bDIST(?:ANCE)?\s*[:=]?\s*(\d{3,5})\b/i.exec(t);if(dl)dist=dl[1];}
+  if(!dist){var vals=[],x,r1=/\bN(?:M|AM)\s+(\d{3,5})\b/gi,r2=/\b(\d{3,5})\s*N(?:M|AM)\b/gi;
     while((x=r1.exec(t)))vals.push(+x[1]);
     while((x=r2.exec(t)))vals.push(+x[1]);
     if(vals.length){var mx=Math.max.apply(null,vals);if(mx>=200)dist=String(mx);}}
