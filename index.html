@@ -109,7 +109,7 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .ct-c{justify-self:center;text-align:center;}
 .ct-r{justify-self:end;text-align:right;}
 .t117{text-align:center;}
-.t117 .clock{font-family:var(--mono);font-weight:600;line-height:1;font-size:clamp(30px,6.6vw,46px);}
+.t117 .clock{font-family:var(--mono);font-weight:600;line-height:1;font-size:clamp(30px,6.6vw,46px);cursor:pointer;}
 .t117 .sub{font-family:var(--mono);font-size:11px;color:var(--txt2);margin-top:3px;}
 .t117 .sub b{color:var(--txt);font-weight:600;}
 .is-green{color:var(--green);} .is-amber{color:var(--amber);} .is-red{color:var(--red);}
@@ -417,7 +417,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
           <button class="cbtn" id="arptbtn">REMARKS</button>
         </div>
         <div class="t117">
-          <div class="lbl">FAR 117 · latest T/O</div>
+          <div class="lbl" id="c_117lbl">FAR 117 · latest T/O</div>
           <div class="clock is-green" id="c_clock">--:--</div>
           <div class="sub" id="c_117sub">to <b>—</b></div>
         </div>
@@ -492,6 +492,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="srow"><span class="k">Dim (sub-min)</span><input type="range" id="s_dim" min="0" max="0.8" step="0.05" value="0"></div>
     <div class="srow"><span class="k">In-flight mode</span><button class="toggle" id="s_inflight" aria-pressed="false">OFF</button></div>
     <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">AUTO</span></div>
+    <div class="srow"><span class="k">Auto wheels-off (GPS+motion)</span><button class="toggle" id="s_autoto" aria-pressed="false">OFF</button></div>
     <div class="setver">Flight Card · Version 2.1</div>
     <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">DONE</button></div>
   </div>
@@ -504,7 +505,7 @@ var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
 
-var settings=loadJSON(SET_KEY,{theme:'night',red:false,dim:0,inflight:false});
+var settings=loadJSON(SET_KEY,{theme:'night',red:false,dim:0,inflight:false,autoto:false});
 function loadJSON(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v||d;}catch(e){return d;}}
 function saveSettings(){localStorage.setItem(SET_KEY,JSON.stringify(settings));}
 function applyTheme(){
@@ -521,6 +522,7 @@ function syncSettingsUI(){
   var r=$('s_red');r.setAttribute('aria-pressed',!!settings.red);r.textContent=settings.red?'ON':'OFF';
   $('s_dim').value=settings.dim||0;
   var inf=$('s_inflight');inf.setAttribute('aria-pressed',!!settings.inflight);inf.textContent=settings.inflight?'ON':'OFF';
+  var at=$('s_autoto');if(at){at.setAttribute('aria-pressed',!!settings.autoto);at.textContent=settings.autoto?'ON':'OFF';}
 }
 $('s_theme').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;settings.theme=b.dataset.v;saveSettings();applyTheme();syncSettingsUI();});
 $('s_red').addEventListener('click',function(){settings.red=!settings.red;saveSettings();applyTheme();syncSettingsUI();});
@@ -534,6 +536,75 @@ $('gear').addEventListener('click',openSettings);
 $('gear2').addEventListener('click',openSettings);
 $('s_close').addEventListener('click',function(){$('settings').classList.remove('on');});
 $('settings').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+/* ---- auto wheels-off + touchdown detection (opt-in; GPS groundspeed/altitude + accelerometer vibration) ---- */
+var AUTO={armed:false,phase:'idle',watchId:null,motionOn:false,motionGranted:false,spdKt:0,vibLevel:0,vibPeak:0,vibAir:0,magMean:null,candidate:0,candidate2:0,altBase:null,sawFast:false};
+var TO_ARM_KT=60, TO_LIFT_KT=110, TO_VIB_DROP=0.45, TO_VIB_HOLD=1200, TO_VIB_FLOOR=0.25, TO_ALT_M=15;
+var LD_SPD_MAX=200, LD_SPD_MIN=35, LD_VIB_RISE=3, LD_VIB_FLOOR=0.30, LD_VIB_HOLD=700, LD_JOLT=1.4;
+function toReqMotion(){
+  try{ if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')
+    return DeviceMotionEvent.requestPermission().then(function(s){return s==='granted';}).catch(function(){return false;}); }catch(e){}
+  return Promise.resolve(true);
+}
+function toLiftoff(ts){ if(CURRENT.airborne)return; CURRENT.airborne=ts||Date.now();
+  try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){} AUTO.phase='air'; disarmAuto(); }
+function toTouchdown(ts){ if(!CURRENT.airborne||CURRENT.landed)return; CURRENT.landed=ts||Date.now();
+  try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){} AUTO.phase='down'; disarmAuto(); }
+function toMotion(e){
+  if(!AUTO.armed)return;
+  var a=e.accelerationIncludingGravity||e.acceleration; if(!a)return;
+  var mag=Math.sqrt((a.x||0)*(a.x||0)+(a.y||0)*(a.y||0)+(a.z||0)*(a.z||0));
+  AUTO.magMean=(AUTO.magMean==null)?mag:(AUTO.magMean*0.98+mag*0.02);
+  var dev=Math.abs(mag-AUTO.magMean);
+  AUTO.vibLevel=AUTO.vibLevel*0.85+dev*0.15;
+  if(AUTO.phase==='roll'){                                   /* takeoff: vibration DROP at rotation */
+    if(AUTO.vibLevel>AUTO.vibPeak)AUTO.vibPeak=AUTO.vibLevel;
+    if(AUTO.spdKt>=TO_LIFT_KT&&AUTO.vibPeak>=TO_VIB_FLOOR&&AUTO.vibLevel<TO_VIB_DROP*AUTO.vibPeak){
+      if(!AUTO.candidate)AUTO.candidate=Date.now();
+      else if(Date.now()-AUTO.candidate>=TO_VIB_HOLD)toLiftoff(AUTO.candidate);
+    }else AUTO.candidate=0;
+  } else if(AUTO.phase==='air'){                             /* landing: vibration ONSET / jolt at touchdown */
+    AUTO.vibAir=AUTO.vibAir*0.99+AUTO.vibLevel*0.01;
+    var inBand=(AUTO.spdKt>=LD_SPD_MIN&&AUTO.spdKt<=LD_SPD_MAX);
+    if(inBand&&dev>=LD_JOLT){toTouchdown(Date.now());return;}
+    if(inBand&&AUTO.vibLevel>=LD_VIB_FLOOR&&AUTO.vibLevel>AUTO.vibAir*LD_VIB_RISE){
+      if(!AUTO.candidate2)AUTO.candidate2=Date.now();
+      else if(Date.now()-AUTO.candidate2>=LD_VIB_HOLD)toTouchdown(AUTO.candidate2);
+    }else AUTO.candidate2=0;
+  }
+}
+function toGps(p){
+  if(!AUTO.armed)return;
+  var c=p.coords||{},now=Date.now();
+  var kt=(c.speed!=null&&c.speed>=0)?c.speed*1.94384:AUTO.spdKt; AUTO.spdKt=kt;
+  var alt=(c.altitude!=null)?c.altitude:null;
+  if(AUTO.phase==='idle'){ if(kt>=TO_ARM_KT){AUTO.phase='roll';AUTO.vibPeak=0;AUTO.candidate=0;AUTO.altBase=alt;} }
+  else if(AUTO.phase==='roll'){
+    if(alt!=null){ if(AUTO.altBase==null||alt<AUTO.altBase)AUTO.altBase=alt;
+      if(kt>=TO_LIFT_KT&&(alt-AUTO.altBase)>=TO_ALT_M)toLiftoff(now); }
+    if(kt<25)AUTO.phase='idle';
+  } else if(AUTO.phase==='air'){
+    if(kt>120)AUTO.sawFast=true;
+    if(!AUTO.motionGranted&&AUTO.sawFast&&kt<LD_SPD_MIN)toTouchdown(now);  /* GPS-only fallback: decel through rollout */
+  }
+}
+function armAuto(){
+  if(!settings.autoto||AUTO.armed||CURRENT.landed)return;
+  AUTO.armed=true;AUTO.spdKt=0;AUTO.vibLevel=0;AUTO.magMean=null;AUTO.candidate=0;AUTO.candidate2=0;
+  if(!CURRENT.airborne){AUTO.phase='idle';AUTO.vibPeak=0;AUTO.altBase=null;}
+  else{AUTO.phase='air';AUTO.vibAir=0;AUTO.sawFast=false;}
+  if('geolocation' in navigator){try{AUTO.watchId=navigator.geolocation.watchPosition(toGps,function(){},{enableHighAccuracy:true,maximumAge:1000,timeout:20000});}catch(e){}}
+  if(AUTO.motionGranted&&!AUTO.motionOn){window.addEventListener('devicemotion',toMotion);AUTO.motionOn=true;}
+}
+function disarmAuto(){
+  AUTO.armed=false;
+  if(AUTO.watchId!=null&&'geolocation' in navigator){try{navigator.geolocation.clearWatch(AUTO.watchId);}catch(e){}AUTO.watchId=null;}
+  if(AUTO.motionOn){window.removeEventListener('devicemotion',toMotion);AUTO.motionOn=false;}
+}
+$('s_autoto').addEventListener('click',function(){
+  settings.autoto=!settings.autoto;saveSettings();syncSettingsUI();
+  if(settings.autoto){toReqMotion().then(function(g){AUTO.motionGranted=g;armAuto();});}
+  else disarmAuto();
+});
 
 /* ---- clipboard ---- */
 function copyText(t){
@@ -654,7 +725,8 @@ function renderCard(d){
   fas.sort(function(a,b){
     var al=(a.pos==='LD'||a.pos==='PUR'),bl=(b.pos==='LD'||b.pos==='PUR');
     if(al!==bl)return al?-1:1; if(al&&bl)return 0;
-    var na=parseInt((a.pos||''),10),nb=parseInt((b.pos||''),10);na=isNaN(na)?9999:na;nb=isNaN(nb)?9999:nb;
+    function rk(p){p=(p||'').toUpperCase();if(p==='JMP')return 100000;var n=parseInt(p,10);return isNaN(n)?9999:n;}
+    var na=rk(a.pos),nb=rk(b.pos);
     if(na!==nb)return na-nb; return (a.pos||'').localeCompare(b.pos||'');
   });
   $('c_fas').textContent=fas.length?fas.map(function(f){return (f.pos?f.pos+') ':'')+(f.first||f.last);}).join('  ·  '):'—';
@@ -895,6 +967,8 @@ function zTarget(hhmm,day,mon){
 function fmtZ(hhmm){return ('0000'+(hhmm||'').replace(/\D/g,'')).slice(-4)+'Z';}
 function fmtRemain(ms){var neg=ms<0,s=Math.floor(Math.abs(ms)/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
   var out=h>=1?(h+':'+('0'+m).slice(-2)):(('0'+m).slice(-2)+':'+('0'+ss).slice(-2));return (neg?'-':'')+out;}
+function fmtElapsed(ms){if(ms<0)ms=0;var s=Math.floor(ms/1000),hh=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;return hh+':'+('0'+mm).slice(-2)+':'+('0'+ss).slice(-2);}
+function zHHMM(ms){var dt=new Date(ms);return ('0'+dt.getUTCHours()).slice(-2)+('0'+dt.getUTCMinutes()).slice(-2);}
 function startTick(d){
   if(tickTimer)clearInterval(tickTimer);
   var clk=$('c_clock'),sub=$('c_117sub');
@@ -904,11 +978,19 @@ function startTick(d){
       var twd=(d.arrDDHHMM||'').slice(0,2)||d.dateDay;
       var ws=d.tlwStart?zTarget(d.tlwStart,twd,d.dateMon):null,we=d.tlwEnd?zTarget(d.tlwEnd,twd,d.dateMon):null;
       if(ws&&we&&we.getTime()<ws.getTime())we=new Date(we.getTime()+864e5);
+      if(settings.autoto&&CURRENT.airborne&&!CURRENT.landed&&!AUTO.armed&&ws&&nowP.getTime()>=ws.getTime()-40*60000)armAuto();
       if(ws&&we&&nowP.getTime()>=ws.getTime()-40*60000&&nowP.getTime()<=we.getTime()){
         pe.style.display='';pe.className='pushpill tgt';
         pe.innerHTML='LDG <b>'+('0000'+d.tlwStart).slice(-4)+'–'+('0000'+d.tlwEnd).slice(-4)+'Z</b>';}
       else if(pt&&pr>0){pe.style.display='';pe.className='pushpill'+(pr/60000<=10?' soon':'');pe.innerHTML='PUSH <b>'+fmtZ(d.push)+'</b> · '+fmtRemain(pr);}
       else pe.style.display='none';}
+    var lbl=$('c_117lbl');
+    if(d.airborne){
+      if(d.landed){var ft=d.landed-d.airborne;clk.textContent=fmtElapsed(ft);clk.className='clock is-green';
+        if(lbl)lbl.textContent='FLIGHT TIME';sub.innerHTML='off <b>'+zHHMM(d.airborne)+'Z</b> · on <b>'+zHHMM(d.landed)+'Z</b>';return;}
+      var elp=Date.now()-d.airborne;clk.textContent=fmtElapsed(elp);clk.className='clock is-green';
+      if(lbl)lbl.textContent='AIRBORNE · flight time';sub.innerHTML='off <b>'+zHHMM(d.airborne)+'Z</b>';return;}
+    if(lbl)lbl.textContent='FAR 117 · latest T/O';
     var base=zTarget(d.latt,d.lattDay,d.dateMon);
     if(!base){clk.textContent='--:--';clk.className='clock';sub.innerHTML='enter LATT';return;}
     var now=new Date(),rem=base-now,minLeft=rem/60000;
@@ -924,6 +1006,11 @@ function startTick(d){
   upd();tickTimer=setInterval(upd,1000);
 }
 (function(){var e=document.getElementById('c_ete');if(e)e.addEventListener('click',function(){var m=(e.dataset.mode==='dist')?'ete':'dist';e.dataset.mode=m;e.textContent=(m==='dist')?(e.dataset.dist||'—'):(e.dataset.ete||'—');});})();
+(function(){var c=$('c_clock');if(!c)return;c.addEventListener('click',function(){
+  if(!CURRENT.airborne){ if(confirm('Mark airborne now and start the flight-time count-up?')){CURRENT.airborne=Date.now();try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}disarmAuto();if(settings.autoto)armAuto();} }
+  else if(!CURRENT.landed){ if(confirm('Mark landed now and stop the flight timer?')){CURRENT.landed=Date.now();try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}disarmAuto();} }
+  else { if(confirm('Reset the flight timer — back to the FAR 117 countdown?')){CURRENT.airborne=0;CURRENT.landed=0;try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}if(settings.autoto)armAuto();} }
+});})();
 
 var wl=null;
 async function reqWake(){try{if('wakeLock' in navigator)wl=await navigator.wakeLock.request('screen');}catch(e){}}
@@ -941,7 +1028,7 @@ function parseRelease(t){
   t=(t||'').replace(/\r/g,'');
   var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
     block:'',minto:'',land:'',rsv:'',route:'',sid:'',star:'',elev:'',altn:'',altf:'',
-    togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',intl:false};
+    togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',intl:false,airborne:0,landed:0};
   var fl=/ATC\/FMS FLT NO\s*-\s*[A-Z]{2,3}\s*(\d+)/.exec(t)||/\bFLT\s+0*(\d+)\//.exec(t)||/\bDAL\s+0*(\d+)\//.exec(t);
   if(fl)d.flt=fl[1];
   var rl=/\bRLS\s+(\d+)/.exec(t);if(rl)d.rls=rl[1];
@@ -1005,7 +1092,7 @@ function parseRelease(t){
     d.pilots.push({role:role,last:p[3],name:p[3],first:(p[4]||'').trim(),emp:p[2].slice(-6)});}
   d.intl=/\bINTERNATIONAL\b/.test(t);
   var f,fre=/F\/A\s+([A-Z])\s+(\d{6,7})\s+([A-Z]+)\s+([A-Z][A-Z ]*?)(?:-{2,}|\s{2,}|$)/gm;
-  while((f=fre.exec(t))){var fpos=(f[1]==='A')?(d.intl?'PUR':'LD'):'';d.fas.push({pos:fpos,emp:f[2].slice(-6),first:f[3],last:f[4].trim()});}
+  while((f=fre.exec(t))){var fpos=(f[1]==='A')?((d.intl||d.type==='767')?'PUR':'LD'):'';d.fas.push({pos:fpos,emp:f[2].slice(-6),first:f[3],last:f[4].trim()});}
   var dm=/([A-Z]+-[A-Z]+)\s+DESK-(\d+)\s+PHONE-(\d+)(?:\*(\d+))?/.exec(t);
   if(dm){d.dispName=dm[1].replace(/-/g,' ');d.dispDesk=dm[2];d.dispPhone=dm[3];d.dispExt=dm[4]||'';}
   var dr=/DISPATCHER REMARKS\s*\n-+\n([\s\S]*?)\n\s*-{5,}/.exec(t);
@@ -1022,9 +1109,9 @@ function parseRelease(t){
   return d;
 }
 function show(id){['paste','form','cardscreen'].forEach(function(s){$(s).classList.toggle('on',s===id);});}
-function showCard(d){renderCard(d);startTick(d);show('cardscreen');window.scrollTo(0,0);reqWake();netUpd();}
+function showCard(d){renderCard(d);startTick(d);show('cardscreen');window.scrollTo(0,0);reqWake();netUpd();if(settings.autoto)armAuto();}
 function showForm(){if(tickTimer)clearInterval(tickTimer);relWake();show('form');window.scrollTo(0,0);}
-function showPaste(){if(tickTimer)clearInterval(tickTimer);relWake();$('pasteback').style.display=loadJSON(DATA_KEY,null)?'':'none';show('paste');window.scrollTo(0,0);}
+function showPaste(){if(tickTimer)clearInterval(tickTimer);relWake();disarmAuto();$('pasteback').style.display=loadJSON(DATA_KEY,null)?'':'none';show('paste');window.scrollTo(0,0);}
 $('build').addEventListener('click',function(){var prev=loadJSON(DATA_KEY,{});var d=Object.assign({},prev,readForm());localStorage.setItem(DATA_KEY,JSON.stringify(d));showCard(d);});
 $('edit').addEventListener('click',function(){var d=loadJSON(DATA_KEY,null);if(d)fillForm(d);showForm();});
 $('topaste').addEventListener('click',showPaste);
