@@ -268,7 +268,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="formhead">Paste dispatch release</div>
     <textarea id="pastebox" rows="12" placeholder="Paste the entire Delta dispatch release here…" style="width:100%;font-size:14px;font-family:var(--mono);"></textarea>
     <div id="parsemsg" class="note" style="color:var(--amber);"></div>
-    <div class="bar" style="margin-top:16px;"><button class="btn go" id="parsebtn" style="flex:1;">PARSE RELEASE → CARD</button></div>
+    <div class="bar" style="margin-top:16px;gap:8px;"><button class="btn" id="pasteclear">Clear</button><button class="btn go" id="parsebtn" style="flex:1;">PARSE RELEASE → CARD</button></div>
     <div class="note">Pulls flight, route, fuel, weights, MELs, crew, LATT, gate, and field elevation straight from the release. Oxygen, current ATIS, and the safe word aren’t on the release — add those on the EDIT screen. Nothing leaves this device.</div>
   </div>
 </section>
@@ -1027,6 +1027,7 @@ function showPaste(){if(tickTimer)clearInterval(tickTimer);relWake();$('pastebac
 $('build').addEventListener('click',function(){var prev=loadJSON(DATA_KEY,{});var d=Object.assign({},prev,readForm());localStorage.setItem(DATA_KEY,JSON.stringify(d));showCard(d);});
 $('edit').addEventListener('click',function(){var d=loadJSON(DATA_KEY,null);if(d)fillForm(d);showForm();});
 $('topaste').addEventListener('click',showPaste);
+$('pasteclear').addEventListener('click',function(){$('pastebox').value='';var pm=$('parsemsg');if(pm)pm.textContent='';$('pastebox').focus();});
 $('formdone').addEventListener('click',function(){$('build').click();});
 $('pasteback').addEventListener('click',function(){var d=loadJSON(DATA_KEY,null);if(d)showCard(d);});
 $('gear3').addEventListener('click',openSettings);
