@@ -1,5 +1,5 @@
 /* Flight Card service worker */
-var CACHE = 'flightcard-v48';
+var CACHE = 'flightcard-v51';
 var CORE = ['./', './index.html', './manifest.json'];
 var ICONS = ['./icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png', './favicon.png'];
 
@@ -12,8 +12,12 @@ self.addEventListener('install', function (e) {
           return c.add(u).catch(function () {});
         }));
       });
-    }).then(function () { return self.skipWaiting(); })
+    })
   );
+});
+
+self.addEventListener('message', function (e) {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', function (e) {

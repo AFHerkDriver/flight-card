@@ -185,9 +185,9 @@ body[data-inflight] .card{border-color:var(--accent);}
 .inflightbar{display:none;}
 body[data-inflight] .inflightbar{display:flex;}
 
-#settings,#infomodal,#premodal,#qedit{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
+#settings,#infomodal,#premodal,#qedit,#updmodal{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
   justify-content:center;padding:24px 14px;overflow:auto;}
-#settings.on,#infomodal.on,#premodal.on,#qedit.on{display:flex;}
+#settings.on,#infomodal.on,#premodal.on,#qedit.on,#updmodal.on{display:flex;}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:520px;padding:18px;}
 .sheet h3{font-family:var(--mono);font-size:14px;letter-spacing:1px;margin:0 0 14px;color:var(--txt);text-transform:uppercase;}
 .routetext{font-family:var(--mono);font-size:clamp(14px,3vw,18px);line-height:1.8;color:var(--txt);word-break:break-word;
@@ -463,6 +463,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <p class="note" style="margin-top:12px;">Not on the release — enter what you have, or leave blank and add later on EDIT.</p>
     </div>
     <div class="bar" style="margin-top:16px;"><button class="btn go" id="pre_done" style="flex:1;">DONE</button></div>
+  </div>
+</div>
+
+<div id="updmodal">
+  <div class="sheet" style="max-width:360px;">
+    <h3>Update available</h3>
+    <div class="note" style="margin:10px 0 16px;">A new version of Flight Card is ready. Update now to load it.</div>
+    <div class="bar" style="gap:8px;"><button class="btn" id="upd_later" style="flex:1;">Later</button><button class="btn go" id="upd_now" style="flex:1;">Update now</button></div>
   </div>
 </div>
 
@@ -1045,12 +1053,12 @@ function parseRelease(t){
   var fb=sliceBetween(t,'DESTINATION FORECAST','WEATHER AROUND DESTINATION')||sliceBetween(t,'DESTINATION FORECAST','ALTERNATE AIRPORT WEATHER');
   if(fb){var fm=[],fre2=/FM(\d{6})\s+([^\n]*)/g,fmm;while((fmm=fre2.exec(fb)))fm.push({t:fmm[1],cond:fmm[2].replace(/\s+$/,'').trim()});
     var valid=(fb.match(/VALID\s+(\d{6}-\d{6})/)||[])[1]||'';if(fm.length)d.wxDestFcst={valid:valid,fm:fm};}
+  var rd=/\b\d{3,4}\/(\d{2})([A-Z]{3})/.exec(t);
+  if(rd){d.dateDay=+rd[1];var mi=monIdx(rd[2]);if(mi>=0)d.dateMon=mi;}
   var pl=/PLANNED\s+(\d{4})Z[^\n]*?(\d{4})Z/.exec(t);
   var depH=pl?pl[1]:((/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{4})Z/.exec(t)||[])[1]||'');
   var arrH=pl?pl[2]:(d.schedin||'');
   if(arrH){var ad=d.dateDay||new Date().getUTCDate();if(depH&&parseInt(arrH,10)<parseInt(depH,10))ad=ad+1;d.arrDDHHMM=('0'+ad).slice(-2)+arrH;}
-  var rd=/\b\d{3,4}\/(\d{2})([A-Z]{3})/.exec(t);
-  if(rd){d.dateDay=+rd[1];var mi=monIdx(rd[2]);if(mi>=0)d.dateMon=mi;}
   var td=/\bB(7[56]\d)\/[JHML]\b/.exec(t)||/SHIP\s+\d+\s+B(75\d|76\d)/.exec(t);
   if(td)d.type=(td[1].charAt(1)==='6')?'767':'757';
   else if(/\bB76\d\b/.test(t)||/\b767\b/.test(t))d.type='767';
@@ -1101,7 +1109,7 @@ function parseRelease(t){
   d.intl=/\bINTERNATIONAL\b/.test(t);
   var f,fre=/F\/A\s+([A-Z])\s+(\d{6,7})\s+([A-Z]+)\s+([A-Z][A-Z ]*?)(?:-{2,}|\s{2,}|$)/gm;
   while((f=fre.exec(t))){var fpos=(f[1]==='A')?((d.intl||d.type==='767')?'PUR':'LD'):'';d.fas.push({pos:fpos,emp:f[2].slice(-6),first:f[3],last:f[4].trim()});}
-  var dm=/([A-Z]+-[A-Z]+)\s+DESK-(\d+)\s+PHONE-(\d+)(?:\*(\d+))?/.exec(t);
+  var dm=/([A-Z]+(?:-[A-Z]+)+)\s+DESK-([A-Z0-9]+)\s+PHONE-(\d+)(?:\*(\d+))?/.exec(t);
   if(dm){d.dispName=dm[1].replace(/-/g,' ');d.dispDesk=dm[2];d.dispPhone=dm[3];d.dispExt=dm[4]||'';}
   var dr=/DISPATCHER REMARKS\s*\n-+\n([\s\S]*?)\n\s*-{5,}/.exec(t);
   if(dr)d.dispRemarks=dr[1].replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
@@ -1183,7 +1191,27 @@ applyTheme();syncSettingsUI();netUpd();
     bootNormal();
   }).catch(bootNormal);
 })();
-if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+var UPD_REG=null, updateRequested=false, refreshing=false;
+function showUpdate(reg){ UPD_REG=reg; var mm=$('updmodal'); if(mm) mm.classList.add('on'); }
+if($('upd_now')) $('upd_now').addEventListener('click',function(){ updateRequested=true; var w=UPD_REG&&(UPD_REG.waiting||UPD_REG.installing); if(w) w.postMessage({type:'SKIP_WAITING'}); $('updmodal').classList.remove('on'); });
+if($('upd_later')) $('upd_later').addEventListener('click',function(){ $('updmodal').classList.remove('on'); });
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      if(reg.waiting && navigator.serviceWorker.controller) showUpdate(reg);
+      reg.addEventListener('updatefound',function(){
+        var nw=reg.installing;
+        if(nw) nw.addEventListener('statechange',function(){
+          if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdate(reg);
+        });
+      });
+      document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') reg.update().catch(function(){}); });
+    }).catch(function(){});
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(!updateRequested || refreshing) return; refreshing=true; window.location.reload();
+    });
+  });
+}
 </script>
 </body>
 </html>
