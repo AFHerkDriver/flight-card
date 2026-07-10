@@ -1,4 +1,4 @@
-# Flight Card — User Notes (v2.1)
+# Flight Card — User Notes
 
 Your leg, on one card. Paste the MiCrew release once before the flight; Flight Card turns it into a glance-readable reference card that works completely offline — including airplane mode.
 
@@ -68,4 +68,4 @@ Day/Night/Auto theme · red night tint · DIM slider (darker than iOS minimum) �
 
 ---
 
-*Version 2.1 · questions, bugs, and ideas → Aaron*
+*Questions, bugs, and ideas → Aaron. The build number lives under the ⚙ gear.*

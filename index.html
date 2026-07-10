@@ -525,7 +525,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="srow"><span class="k">In-flight mode</span><button class="toggle" id="s_inflight" aria-pressed="false">OFF</button></div>
     <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">Auto</span></div>
     <div class="srow"><span class="k">Auto wheels-off (GPS+motion)</span><button class="toggle" id="s_autoto" aria-pressed="false">OFF</button></div>
-    <div class="setver">Flight Card · Version 2.1</div>
+    <div class="setver">Flight Card</div>
     <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">Done</button></div>
   </div>
 </div>
@@ -533,7 +533,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v60'; /* keep in step with sw.js CACHE */
+var BUILD='v61'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -1202,7 +1202,7 @@ $('parsebtn').addEventListener('click',function(){
 $('clearall').addEventListener('click',function(){if(confirm('Clear all card data on this device?')){localStorage.removeItem(DATA_KEY);fillForm({});window.scrollTo(0,0);}});
 
 applyTheme();syncSettingsUI();netUpd();
-(function(){['gearv','gearv2'].forEach(function(i){var e=$(i);if(e)e.textContent=BUILD;});var sv=document.querySelector('.setver');if(sv)sv.textContent='Flight Card \u00b7 Version 2.1 \u00b7 '+BUILD;})();
+(function(){['gearv','gearv2'].forEach(function(i){var e=$(i);if(e)e.textContent=BUILD;});var sv=document.querySelector('.setver');if(sv)sv.textContent='Flight Card \u00b7 '+BUILD;})();
 (function () {
   var BRIDGE_URL = '/__afhd_bridge_release__', BRIDGE_TS = 'flightcard_bridge_ts';
   function bridgeRead() {
