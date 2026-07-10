@@ -2,7 +2,8 @@
    Cache-first page + guarded background refresh.
    Survives flaky / captive-portal / partial connections without blanking. */
 
-const CACHE = 'flightcard-v61';                  // bump on every deploy
+const BUILD_REV='2c939b52'; // internal integrity stamp
+const CACHE = 'flightcard-v63';                  // bump on every deploy
 const PAGE  = './index.html';                    // app shell
 const PRECACHE = ['./', PAGE, './manifest.json',
   './icon-512.png', './icon-512-maskable.png', './icon-192.png',

@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- build integrity 2c939b52599f61cb8cf52440a282ed5d670af91d8b4ef3d6e20a629441bada17 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -526,6 +527,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">Auto</span></div>
     <div class="srow"><span class="k">Auto wheels-off (GPS+motion)</span><button class="toggle" id="s_autoto" aria-pressed="false">OFF</button></div>
     <div class="setver">Flight Card</div>
+    <div class="setver" id="s_diag" style="margin-top:4px;"></div>
     <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">Done</button></div>
   </div>
 </div>
@@ -533,7 +535,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v61'; /* keep in step with sw.js CACHE */
+var BUILD='v63'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -563,7 +565,7 @@ $('s_dim').addEventListener('input',function(){settings.dim=parseFloat(this.valu
 $('s_dim').addEventListener('change',saveSettings);
 $('s_inflight').addEventListener('click',function(){settings.inflight=!settings.inflight;saveSettings();applyTheme();syncSettingsUI();});
 $('inflight').addEventListener('click',function(){settings.inflight=true;saveSettings();applyTheme();syncSettingsUI();});
-function openSettings(){syncSettingsUI();$('settings').classList.add('on');}
+function openSettings(){syncSettingsUI();$('settings').classList.add('on');var dg=$('s_diag');if(dg){var d=CURRENT||{};var tw=(d.tlwStart&&d.tlwEnd)?('TLW '+d.tlwStart+'\u2013'+d.tlwEnd+'Z'):'TLW not parsed';var ar=d.arrDDHHMM?('arr '+d.arrDDHHMM+'Z'):'arr \u2014';var sn=(typeof AUTO!=='undefined'&&AUTO.armed)?('sensing armed \u00b7 '+AUTO.phase):'sensing off';dg.textContent=tw+' \u00b7 '+ar+' \u00b7 '+sn;}}
 $('gear').addEventListener('click',openSettings);
 $('gear2').addEventListener('click',openSettings);
 $('ifgear').addEventListener('click',openSettings);
@@ -712,6 +714,12 @@ function readForm(){
 
 function callno(s){s=(s||'').replace(/\D/g,'').replace(/^0+/,'');return s;}
 function renderCard(d){
+  try{ renderCardCore(d); }catch(err){
+    var c=document.querySelector('.card');
+    if(c)c.innerHTML='<div style="font:600 13px/1.6 var(--mono);color:var(--red);padding:18px;">Card render hit a bug \u2014 screenshot and report:<br>'+esc((err&&err.message||String(err))+'\n'+((err&&err.stack)||'').split('\n').slice(0,3).join('\n'))+'</div>';
+  }
+}
+function renderCardCore(d){
   CURRENT=d;
   $('c_orig').textContent=d.orig||'—';
   $('c_dest').textContent=d.dest||'—';
@@ -1012,7 +1020,7 @@ function startTick(d){
       var twd=(d.arrDDHHMM||'').slice(0,2)||d.dateDay;
       var ws=d.tlwStart?zTarget(d.tlwStart,twd,d.dateMon):null,we=d.tlwEnd?zTarget(d.tlwEnd,twd,d.dateMon):null;
       if(ws&&we&&we.getTime()<ws.getTime())we=new Date(we.getTime()+864e5);
-      if(settings.autoto&&CURRENT.airborne&&!CURRENT.landed&&!AUTO.armed&&ws&&nowP.getTime()>=ws.getTime()-40*60000)armAuto();
+      if(settings.autoto&&CURRENT.airborne&&!CURRENT.landed&&!AUTO.armed)armAuto(); /* landing sensing arms for the whole airborne phase; not gated on TLW */
       if(ws&&we&&nowP.getTime()>=ws.getTime()-40*60000&&nowP.getTime()<=we.getTime()){
         pe.style.display='';pe.className='pushpill tgt';
         pe.innerHTML='LDG <b>'+('0000'+d.tlwStart).slice(-4)+'–'+('0000'+d.tlwEnd).slice(-4)+'Z</b>';}
@@ -1248,7 +1256,8 @@ function cardExpired(d){
 })();
 var UPD_REG=null, updateRequested=false, refreshing=false;
 function showUpdate(reg){ UPD_REG=reg; var mm=$('updmodal'); if(mm) mm.classList.add('on'); }
-if($('upd_now')) $('upd_now').addEventListener('click',function(){ updateRequested=true; var w=UPD_REG&&(UPD_REG.waiting||UPD_REG.installing); if(w) w.postMessage({type:'SKIP_WAITING'}); $('updmodal').classList.remove('on'); });
+if($('upd_now')) $('upd_now').addEventListener('click',function(){ updateRequested=true; var w=UPD_REG&&(UPD_REG.waiting||UPD_REG.installing); if(w) w.postMessage({type:'SKIP_WAITING'}); $('updmodal').classList.remove('on');
+  setTimeout(function(){ if(!refreshing){ refreshing=true; window.location.reload(); } },1000); /* iOS PWAs can swap the SW slowly; do not wait forever */ });
 if($('upd_later')) $('upd_later').addEventListener('click',function(){ $('updmodal').classList.remove('on'); });
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
