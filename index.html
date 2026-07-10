@@ -182,7 +182,8 @@ body[data-inflight] .wrap{padding-top:6px;}
 body[data-inflight] .callsign{font-size:clamp(58px,13.5vw,108px);}
 body[data-inflight] .dwidget{height:clamp(38px,9vw,72px);}
 body[data-inflight] .card{border-color:var(--accent);}
-.iconbtn{display:inline-flex;align-items:center;justify-content:center;min-width:48px;padding:0 12px;}
+.iconbtn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:52px;padding:5px 12px;}
+.vlab{font:600 9px/1 var(--mono);letter-spacing:.5px;color:var(--txt3);}
 .iconbtn svg{display:block;}
 .ifgear{display:none;position:fixed;top:10px;right:12px;z-index:40;background:none;border:0;color:var(--txt3);opacity:.55;padding:12px;cursor:pointer;}
 .ifgear:active{opacity:1;}
@@ -284,7 +285,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <strong style="font-family:var(--mono);letter-spacing:1px;font-size:15px;">EDIT CARD</strong>
       <span class="sp"></span>
       <button class="btn sm go" id="formdone">DONE ›</button>
-      <button class="btn sm iconbtn" id="gear2" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg></button>
+      <button class="btn sm iconbtn" id="gear2" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg><span class="vlab" id="gearv2"></span></button>
     </div>
 
     <div class="formhead">Flight</div>
@@ -378,7 +379,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <button class="btn sm" id="inflight">IN-FLIGHT</button>
       <span class="sp"></span>
       <span class="pill" id="netpill"><span class="dot"></span><span id="nettext">OFFLINE</span></span>
-      <button class="btn sm iconbtn" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg></button>
+      <button class="btn sm iconbtn" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg><span class="vlab" id="gearv"></span></button>
     </div>
 
     <div class="card">
@@ -519,6 +520,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
+var BUILD='v57'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -1187,6 +1189,7 @@ $('parsebtn').addEventListener('click',function(){
 $('clearall').addEventListener('click',function(){if(confirm('Clear all card data on this device?')){localStorage.removeItem(DATA_KEY);fillForm({});window.scrollTo(0,0);}});
 
 applyTheme();syncSettingsUI();netUpd();
+(function(){['gearv','gearv2'].forEach(function(i){var e=$(i);if(e)e.textContent=BUILD;});var sv=document.querySelector('.setver');if(sv)sv.textContent='Flight Card \u00b7 Version 2.1 \u00b7 '+BUILD;})();
 (function () {
   var BRIDGE_URL = '/__afhd_bridge_release__', BRIDGE_TS = 'flightcard_bridge_ts';
   function bridgeRead() {

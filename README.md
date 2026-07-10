@@ -1,129 +1,71 @@
-# Flight Card — v2.1
+# Flight Card — User Notes (v2.1)
 
-A glance-legible, **offline-first** flight-deck reference card for the iPad EFB. Paste a Delta dispatch release once before the flight and Flight Card renders a single, yoke-distance reference card for the leg. After the first load it runs with **no network of any kind** — including airplane mode.
+Your leg, on one card. Paste the MiCrew release once before the flight; Flight Card turns it into a glance-readable reference card that works completely offline — including airplane mode.
 
-> **Reference aid only.** Every value is parsed from text you paste and must be verified against the AOM/FCOM/FOM and the release itself. Nothing on this card is authoritative. Data is pulled one time, pre-flight; the app makes no live calls.
+> **Reference aid only.** Everything on the card comes from the text you paste. Verify against the AOM/FCOM/FOM/QRH and the release itself. Nothing leaves your iPad.
 
-Live: `https://afherkdriver.github.io/flightcard/`
-Internal cache: `flightcard-v40` · Milestone: **v2.1**
-
----
-
-## What it does
-
-1. **Paste** the full dispatch release text on the start screen.
-2. Flight Card **parses** it locally (nothing leaves the device) and **prompts** for the three things not on the release — oxygen, current ATIS, safe word — all optional.
-3. It renders the **card**: callsign hero flanked by nav and fuel, header weights and times, a FAR 117 countdown, a pushback countdown, and tap-through detail popups.
-
-Raw release text is never stored beyond the parse.
+Open it here: **https://afherkdriver.github.io/flight-card/**
 
 ---
 
-## The card
+## First-time setup (once, on the ground with signal)
 
-**Header**
-- City pair `KDTW → KSEA` with the aircraft icon centered.
-- **TOGW** and **LDG WT** in small text flanking the icon.
-- Below the icon: a tappable readout showing **ETE** — tap it to swap to **distance** (e.g. `1695 NM`), tap again to swap back.
-- Departure gate (left) and arrival gate (right). Arrival gate carries the scheduled landing time (`LAND ~1731Z`) beneath it.
+1. Open the link above in **Safari**.
+2. Share button → **Add to Home Screen** → Add.
+3. Launch from the icon from now on. After that first load it runs fully offline.
 
-**Pushback pill** — a live countdown to the scheduled push time; it disappears once the time passes.
+Updates take care of themselves: when a new version is out, a popup offers **Update now** next time you open it with signal.
 
-**Hero row (nav · callsign · fuel)**
-- Left wing: SID, STAR, field elevation, alternate.
-- Center: oxygen, callsign (`▲ DAL734`), HEAVY (767 only), then the **ATIS / PAX** block — double-tap anywhere in that block to cycle the ATIS letter (A→B→…→Z→A); the choice persists.
-- Right wing: Block, Min T/O, Exp Land, Reserve.
+---
 
-**FAR 117 timer** — counts down to the latest allowable takeoff time, color-coded green/amber/red and flashing when passed, with the extension shown as a secondary line. Flanked by the four detail buttons:
+## Loading a flight
 
-| Left of timer | Right of timer |
+1. Pull your flight plan in **MiCrew**; open the email it sends you.
+2. Copy the **whole thing** — release, weather, crew list, addendum. No trimming needed.
+3. Paste into Flight Card and hit **PARSE RELEASE → CARD**.
+4. It asks for the few items not on the release — oxygen, ATIS, safe word, departure gate. Fill or skip; you can add them later.
+
+New leg? **EDIT → PASTE** and go again. (There's a **Clear** button by the paste box.) The raw release text is discarded after parsing, and the card cleans itself off the device about two days after the flight.
+
+---
+
+## Reading the card
+
+- **Top:** city pair, weights around the jet, ETE (tap it to flip to distance), gates both sides.
+- **Pill under the header:** counts down to push, disappears once you're out — then reappears green with your **target landing window** about 40 minutes before it opens.
+- **Middle:** nav on the left (SID/STAR/elevation/alternate), callsign with HEAVY when it applies, ATIS box, fuel on the right.
+- **FAR 117 timer:** counts down to latest T/O — green, amber inside an hour, red inside 20 minutes.
+- **Bottom:** MELs, safe word, pilots, and the FAs in cabin order behind the LD/PUR.
+
+## The taps (most of the app is hidden here)
+
+| Tap… | You get |
 |---|---|
-| **DISPATCH** · **ROUTE** | **RPT PTS** · **REMARKS** |
+| ETE | flips to distance and back |
+| PAX / arrival gate / oxygen | edit it right there |
+| Safe word | show/hide · **double-tap** to edit |
+| The red Delta ▲ | cycles the ATIS letter |
+| Reserve fuel | delay fuel — amount, minutes, FL150/clean |
+| Departure airport | dispatch METAR, matched to the current Zulu hour |
+| Arrival airport | the full TAF, with your arrival period highlighted and decoded |
+| Dispatcher phone (in DISPATCH) | copies it **with pauses + extension** — paste straight into the dialer |
+| Any MEL chip | copies it |
+| FAR 117 timer | marks **airborne** (green count-up) → tap again at the gate for **flight time** → tap again to reset |
 
-- **ROUTE** — CRZ FL / Cost Index tiles, then the route as color-coded waypoint chips: DCT in amber, airways in blue, SID/STAR in purple, fixes/navaids/airports in white.
-- **DISPATCH** — name, desk, phone, and dispatcher remarks (wide popup).
-- **RPT PTS** — DAL reporting points as a numbered sequence.
-- **REMARKS** — airport + alternate (+ city-pair) remarks, with NOTAM sections excluded.
+DISPATCH · ROUTE · RPT PTS · REMARKS buttons open the detail popups; every popup has a COPY button.
 
-Each popup has a COPY button that lifts clean plain text.
+## Flight attendants
 
-**Below the hero** — MEL chips (tap to copy), safe word (tap to reveal/hide), pilots (last name + employee number), and flight attendants (`A) MIKAYLA · B) …`).
+The release fills the names. The A-position gets **LD** (domestic 757) or **PUR** (international, or any 767) automatically. Type cabin positions (2L, 3L, 4L…) into the blank position boxes on EDIT and the card lines everyone up in cabin order. Add a jumpseater with **+ F/A** and position **JMP** — they list last.
 
----
+## Flight-time backup (off/on times)
 
-## Timers and Zulu dates
+Tap the FAR 117 timer to mark wheels-off manually, or turn on **Auto wheels-off (GPS+motion)** in Settings and let the iPad catch the roll and the touchdown itself (hard-mounted iPad, app on screen). Off/on times are correctable on the EDIT page under **Flight times (backup)** if the detection is off by a bit.
 
-Both the pushback and FAR 117 countdowns are **anchored to the release date** (parsed from the flight date and the `DD/HHMMZ` LATT stamp), not just the time of day. An old card will read **PAST** rather than restarting its countdown against today.
+## Settings (the ⚙ gear, top right)
 
----
-
-## The data card (EDIT screen)
-
-Everything parsed is editable, and a few things are manual-only:
-
-- **Manual entries:** oxygen, current ATIS, safe word (prompted after each parse; can be left blank).
-- **Pilots:** first name, last name, and 6-digit employee number. The card displays last name only.
-- **Flight attendants:** position, first name, last name, and employee number. The card displays first names only.
-- Distance has a manual field as a fallback when a release doesn't publish it.
-
-Tap **EDIT** on the card to adjust anything; **BUILD CARD** re-renders. Parse-only fields (dispatcher, remarks, reporting points, CRZ FL/CI, dates) are preserved across edits.
+Day/Night/Auto theme · red night tint · DIM slider (darker than iOS minimum) · **In-flight mode** (hides the buttons, enlarges the card — exit via the small dim gear in the corner) · wake-lock status (should read **ACTIVE**; if it says TAP SCREEN, touch anywhere once) · **Clear all** wipes the card immediately.
 
 ---
 
-## Flight-deck human factors
-
-- Day / Night / Auto themes applied before first paint — no bright flash opening at night; last setting remembered.
-- Sub-minimum DIM slider and optional warm red night-vision tint.
-- Monospaced numerics, large hero readouts, ~50px touch targets for gloves/turbulence.
-- Orientation-aware: single column portrait, flanked wings in landscape.
-- Cockpit color convention: green = normal, amber = caution, red = warning.
-- Honors reduced-motion, shows an offline/online indicator, and holds a screen wake-lock automatically.
-- **In-flight mode** hides setup chrome and enlarges the working card.
-
----
-
-## Install (iPad)
-
-1. Open `https://afherkdriver.github.io/flightcard/` in Safari **once, online**, to let the service worker cache the app.
-2. Share → **Add to Home Screen**.
-3. Launch from the home screen. It now runs fully offline, including in airplane mode.
-
----
-
-## Repository / deployment
-
-Drop the `flightcard/` folder at the root of the `AFHerkDriver.github.io` repo (GitHub Pages enabled). The app is self-contained and serves at `afherkdriver.github.io/flightcard/`.
-
-```
-flightcard/
-├── index.html              all HTML, CSS, and JS inline
-├── manifest.json
-├── sw.js                   network-first for the page, cache-first for assets
-├── icon-512.png
-├── icon-512-maskable.png
-├── icon-192.png
-├── apple-touch-icon.png    180×180
-├── favicon.png
-└── README.md
-```
-
-**Updating:** bump the `CACHE` string in `sw.js` on every redeploy so clients pick up the new build.
-
----
-
-## Technical notes
-
-- Vanilla HTML/CSS/JS, no frameworks, no CDNs, no build step. Everything is inline in `index.html`; `manifest.json` and `sw.js` are the only sidecar files.
-- In-app images (aircraft icon, Delta widget) are inline base64; home-screen icons are real PNGs.
-- All state persists in `localStorage`. No server, no fetch/API calls.
-- Service worker: network-first for page navigation, cache-first for static assets, versioned cache.
-
----
-
-## Version
-
-**2.1** — adds the CacheStorage release bridge (auto-loads a release handed off from the Dispatch Release Viewer on the same origin, no re-paste), the target landing window shown in the pill (appears ~40 min before the window, date-anchored, hides after it passes), FA ordering by cabin position (2L→3L→4L…) after the LD/PUR lead, the ATIS shown in a bordered box, the full destination TAF with the arrival period highlighted and decoded, and parse-only weather (live METAR pull removed). Internal cache `flightcard-v40`.
-
-**2.0** — prior milestone. Adds tap-to-update fields (PAX, arrival gate, oxygen), safe word tap-to-reveal in pink with double-tap to edit, ATIS cycling from the Delta widget, the recolored ROUTE chips (airports green, waypoints blue, airways yellow, SID/STAR purple, DCT implied), dispatcher release number + tap-to-copy phone, the DONE button and crew lead labeling (LD/PUR) on the data card, the tap-to-reveal delay-fuel popup on the reserve, and the weather engine: tapping the departure ICAO shows the dispatch METAR scrubbed to current Zulu time, and tapping the arrival ICAO shows the full destination TAF with the planned-arrival period highlighted and decoded. Weather is parse-only (no live pull). Also: ATIS shown in a bordered box, FAs ordered by cabin position (2L→3L→4L…) after the LD/PUR lead, and the safe word reveals in pink with double-tap to edit. Internal cache (2.0 snapshot).
-
-**1.0** — first stable milestone. Paste-and-parse flow with manual-entry prompt; flanked nav/fuel hero; ETE↔distance toggle; pushback and date-anchored FAR 117 countdowns; scheduled gate and landing-time parsing; styled ROUTE / DISPATCH / RPT PTS / REMARKS popups; crew first/last/employee capture. Internal cache `flightcard-v14`.
+*Version 2.1 · questions, bugs, and ideas → Aaron*
