@@ -116,6 +116,18 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .flash{animation:fl 1s steps(1,end) infinite;}
 @keyframes fl{50%{opacity:.25;}}
 @media (prefers-reduced-motion:reduce){.flash{animation:none;}}
+@media (max-width:560px){
+  .heromid{gap:6px;}
+  .col-nav .lbl,.col-fuel .lbl{font-size:9px;letter-spacing:.4px;white-space:nowrap;}
+  .col-nav .v{font-size:15px;white-space:nowrap;margin-bottom:7px;}
+  .col-fuel .fuel{font-size:17px;white-space:nowrap;}
+  .callsign{font-size:clamp(34px,10.5vw,80px);letter-spacing:0;}
+  .dwidget{height:clamp(24px,6.4vw,58px);}
+  .heavy{letter-spacing:4px;text-indent:4px;font-size:clamp(14px,3.6vw,26px);}
+  .o2{font-size:clamp(18px,4.2vw,28px);}
+  body[data-inflight] .callsign{font-size:clamp(38px,11.5vw,108px);}
+  body[data-inflight] .dwidget{height:clamp(26px,7vw,72px);}
+}
 
 .heromid{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(8px,2vw,18px);align-items:center;border-top:1px solid var(--line2);padding:16px 0;}
 .centerstack{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;border-top:1px solid var(--line2);padding:16px 0 4px;}
@@ -266,13 +278,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="bar">
       <strong style="font-family:var(--mono);letter-spacing:1px;font-size:15px;">FLIGHT CARD</strong>
       <span class="sp"></span>
-      <button class="btn sm" id="pasteback" style="display:none;">‹ CARD</button>
-      <button class="btn sm" id="gear3">SETTINGS</button>
+      <button class="btn sm" id="pasteback" style="display:none;">‹ Card</button>
+      <button class="btn sm" id="gear3">Settings</button>
     </div>
     <div class="formhead">Paste dispatch release</div>
     <textarea id="pastebox" rows="12" placeholder="Paste the entire Delta dispatch release here…" style="width:100%;font-size:14px;font-family:var(--mono);"></textarea>
     <div id="parsemsg" class="note" style="color:var(--amber);"></div>
-    <div class="bar" style="margin-top:16px;gap:8px;"><button class="btn" id="pasteclear">Clear</button><button class="btn go" id="parsebtn" style="flex:1;">PARSE RELEASE → CARD</button></div>
+    <div class="bar" style="margin-top:16px;gap:8px;"><button class="btn" id="pasteclear">Clear</button><button class="btn go" id="parsebtn" style="flex:1;">Parse Release → Card</button></div>
     <div class="note">Pulls flight, route, fuel, weights, MELs, crew, LATT, gate, and field elevation straight from the release. Oxygen, current ATIS, and the safe word aren’t on the release — add those on the EDIT screen. Nothing leaves this device.</div>
   </div>
 </section>
@@ -281,10 +293,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <section id="form" class="screen">
   <div class="wrap">
     <div class="bar">
-      <button class="btn sm" id="topaste">‹ PASTE</button>
+      <button class="btn sm" id="topaste">‹ Paste</button>
       <strong style="font-family:var(--mono);letter-spacing:1px;font-size:15px;">EDIT CARD</strong>
       <span class="sp"></span>
-      <button class="btn sm go" id="formdone">DONE ›</button>
+      <button class="btn sm go" id="formdone">Done ›</button>
       <button class="btn sm iconbtn" id="gear2" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg><span class="vlab" id="gearv2"></span></button>
     </div>
 
@@ -363,9 +375,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="rows" id="f_fas"></div>
     <button class="btn sm addbtn" id="addfa" style="margin-top:8px;">+ F/A</button>
 
-    <div class="bar" style="margin-top:26px;"><button class="btn go" id="build" style="flex:1;">BUILD CARD</button></div>
+    <div class="bar" style="margin-top:26px;"><button class="btn go" id="build" style="flex:1;">Build Card</button></div>
     <div class="samplebar">
-      <button class="btn sm danger" id="clearall">Clear all</button></div>
+      <button class="btn sm danger" id="clearall">Clear All</button></div>
     <div class="note">All entry manual off the dispatch release. Card is a convenience reference, only as right as what's keyed in — verify against the release. Nothing leaves this device; works in airplane mode after first load.</div>
   </div>
 </section>
@@ -375,8 +387,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
   <button class="ifgear" id="ifgear" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg></button>
   <div class="wrap">
     <div class="bar editchrome">
-      <button class="btn sm" id="edit">EDIT</button>
-      <button class="btn sm" id="inflight">IN-FLIGHT</button>
+      <button class="btn sm" id="edit">Edit</button>
+      <button class="btn sm" id="inflight">In-Flight</button>
       <span class="sp"></span>
       <span class="pill" id="netpill"><span class="dot"></span><span id="nettext">OFFLINE</span></span>
       <button class="btn sm iconbtn" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg><span class="vlab" id="gearv"></span></button>
@@ -424,8 +436,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 
       <div class="centerstack">
         <div class="btncol">
-          <button class="cbtn" id="dispbtn">DISPATCH</button>
-          <button class="cbtn" id="arptbtn">REMARKS</button>
+          <button class="cbtn" id="dispbtn">Dispatch</button>
+          <button class="cbtn" id="arptbtn">Remarks</button>
         </div>
         <div class="t117">
           <div class="lbl" id="c_117lbl">FAR 117 · latest T/O</div>
@@ -433,8 +445,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
           <div class="sub" id="c_117sub">to <b>—</b></div>
         </div>
         <div class="btncol">
-          <button class="cbtn" id="routebtn">ROUTE</button>
-          <button class="cbtn" id="rptbtn">RPT PTS</button>
+          <button class="cbtn" id="routebtn">Route</button>
+          <button class="cbtn" id="rptbtn">Rpt Pts</button>
         </div>
       </div>
 
@@ -445,7 +457,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 
       <div class="crewc">
         <div class="lbl">Safe word</div>
-        <button class="swbtn" id="c_safebtn" type="button">•••• TAP</button>
+        <button class="swbtn" id="c_safebtn" type="button">•••• Tap</button>
         <div class="cline" id="c_pilots">—</div>
         <div class="cfas" id="c_fas">—</div>
       </div>
@@ -466,7 +478,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       </div>
       <p class="note" style="margin-top:12px;">Not on the release — enter what you have, or leave blank and add later on EDIT.</p>
     </div>
-    <div class="bar" style="margin-top:16px;"><button class="btn go" id="pre_done" style="flex:1;">DONE</button></div>
+    <div class="bar" style="margin-top:16px;"><button class="btn go" id="pre_done" style="flex:1;">Done</button></div>
   </div>
 </div>
 
@@ -491,8 +503,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <h3 id="im_title">—</h3>
     <div class="ibody" id="im_body"></div>
     <div class="bar" style="margin-top:16px;gap:8px;">
-      <button class="btn" id="im_copy" style="flex:1;">COPY</button>
-      <button class="btn go" id="im_close" style="flex:1;">DONE</button>
+      <button class="btn" id="im_copy" style="flex:1;">Copy</button>
+      <button class="btn go" id="im_close" style="flex:1;">Done</button>
     </div>
   </div>
 </div>
@@ -503,24 +515,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <h3>Display</h3>
     <div class="srow"><span class="k">Theme</span>
       <div class="segsm" id="s_theme">
-        <button data-v="day" aria-pressed="false">DAY</button>
-        <button data-v="night" aria-pressed="true">NIGHT</button>
-        <button data-v="auto" aria-pressed="false">AUTO</button>
+        <button data-v="day" aria-pressed="false">Day</button>
+        <button data-v="night" aria-pressed="true">Night</button>
+        <button data-v="auto" aria-pressed="false">Auto</button>
       </div></div>
     <div class="srow"><span class="k">Red night tint</span><button class="toggle" id="s_red" aria-pressed="false">OFF</button></div>
     <div class="srow"><span class="k">Dim (sub-min)</span><input type="range" id="s_dim" min="0" max="0.8" step="0.05" value="0"></div>
     <div class="srow"><span class="k">In-flight mode</span><button class="toggle" id="s_inflight" aria-pressed="false">OFF</button></div>
-    <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">AUTO</span></div>
+    <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">Auto</span></div>
     <div class="srow"><span class="k">Auto wheels-off (GPS+motion)</span><button class="toggle" id="s_autoto" aria-pressed="false">OFF</button></div>
     <div class="setver">Flight Card · Version 2.1</div>
-    <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">DONE</button></div>
+    <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">Done</button></div>
   </div>
 </div>
 
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v57'; /* keep in step with sw.js CACHE */
+var BUILD='v59'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -737,7 +749,7 @@ function renderCard(d){
   }else{var s=document.createElement('span');s.className='melchip none';s.textContent='NONE';mc.appendChild(s);}
   /* safe word (masked by default) */
   var sw=$('c_safebtn');sw.classList.remove('shown');
-  if(d.safe){sw.textContent='•••• TAP';sw.dataset.word=d.safe;sw.style.opacity='1';}
+  if(d.safe){sw.textContent='•••• Tap';sw.dataset.word=d.safe;sw.style.opacity='1';}
   else{sw.textContent='—';sw.dataset.word='';sw.style.opacity='.55';}
   sw.disabled=false;
   /* crew */
@@ -881,7 +893,7 @@ function openInfo(title,html,copy,wide){
 }
 $('im_close').addEventListener('click',function(){$('infomodal').classList.remove('on');});
 $('infomodal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
-$('im_copy').addEventListener('click',function(){var b=this;copyText(IM_COPY).then(function(ok){if(ok){b.textContent='COPIED';setTimeout(function(){b.textContent='COPY';},1000);}});});
+$('im_copy').addEventListener('click',function(){var b=this;copyText(IM_COPY).then(function(ok){if(ok){b.textContent='Copied';setTimeout(function(){b.textContent='Copy';},1000);}});});
 $('im_body').addEventListener('click',function(e){var c=e.target.closest&&e.target.closest('.kvcopy');if(!c)return;copyText(c.getAttribute('data-copy')||'').then(function(ok){if(ok){c.classList.add('flash');setTimeout(function(){c.classList.remove('flash');},900);}});});
 function remarksHTML(text){
   var t=(text||'').replace(/\r/g,'');
