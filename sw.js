@@ -1,5 +1,5 @@
 /* Flight Card service worker */
-var CACHE = 'flightcard-v51';
+var CACHE = 'flightcard-v53';
 var CORE = ['./', './index.html', './manifest.json'];
 var ICONS = ['./icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png', './favicon.png'];
 

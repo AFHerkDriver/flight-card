@@ -990,7 +990,7 @@ function startTick(d){
   var clk=$('c_clock'),sub=$('c_117sub');
   function upd(){
     var pe=$('c_push');
-    if(pe){var nowP=new Date(),pt=zTarget(d.push,d.dateDay,d.dateMon),pr=pt?(pt-nowP):null;
+    if(pe){var nowP=new Date(),pdD=d.dateDay?(+d.dateDay+(+d.pushDayOff||0)):d.dateDay,pt=zTarget(d.push,pdD,d.dateMon),pr=pt?(pt-nowP):null;
       var twd=(d.arrDDHHMM||'').slice(0,2)||d.dateDay;
       var ws=d.tlwStart?zTarget(d.tlwStart,twd,d.dateMon):null,we=d.tlwEnd?zTarget(d.tlwEnd,twd,d.dateMon):null;
       if(ws&&we&&we.getTime()<ws.getTime())we=new Date(we.getTime()+864e5);
@@ -1042,7 +1042,7 @@ function rx(re,t,i){var x=re.exec(t);return x?x[i==null?1:i]:'';}
 function monIdx(s){return ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf((s||'').toUpperCase());}
 function parseRelease(t){
   t=(t||'').replace(/\r/g,'');
-  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
+  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',pushDayOff:0,dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
     block:'',minto:'',land:'',rsv:'',route:'',sid:'',star:'',elev:'',altn:'',altf:'',
     togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',intl:false,airborne:0,landed:0};
   var fl=/ATC\/FMS FLT NO\s*-\s*[A-Z]{2,3}\s*(\d+)/.exec(t)||/\bFLT\s+0*(\d+)\//.exec(t)||/\bDAL\s+0*(\d+)\//.exec(t);
@@ -1055,10 +1055,16 @@ function parseRelease(t){
     var valid=(fb.match(/VALID\s+(\d{6}-\d{6})/)||[])[1]||'';if(fm.length)d.wxDestFcst={valid:valid,fm:fm};}
   var rd=/\b\d{3,4}\/(\d{2})([A-Z]{3})/.exec(t);
   if(rd){d.dateDay=+rd[1];var mi=monIdx(rd[2]);if(mi>=0)d.dateMon=mi;}
+  var st=/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z-(\d{3,4})L\s*-\s*[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z/.exec(t);
+  if(st){d.push=('0000'+st[1]).slice(-4);d.schedin=('0000'+st[3]).slice(-4);
+    var zed=('0000'+st[1]).slice(-4),loc=('0000'+st[2]).slice(-4);
+    var zm=(+zed.slice(0,2))*60+(+zed.slice(2)),lm=(+loc.slice(0,2))*60+(+loc.slice(2));
+    var off=((zm-lm)+2880)%1440;
+    d.pushDayOff=(off<=780&&zm<lm)?1:0;} /* western tz: Zulu wrapped past midnight -> dep Zulu date = local date + 1 */
   var pl=/PLANNED\s+(\d{4})Z[^\n]*?(\d{4})Z/.exec(t);
   var depH=pl?pl[1]:((/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{4})Z/.exec(t)||[])[1]||'');
   var arrH=pl?pl[2]:(d.schedin||'');
-  if(arrH){var ad=d.dateDay||new Date().getUTCDate();if(depH&&parseInt(arrH,10)<parseInt(depH,10))ad=ad+1;d.arrDDHHMM=('0'+ad).slice(-2)+arrH;}
+  if(arrH){var ad=(d.dateDay||new Date().getUTCDate())+(d.pushDayOff||0);if(depH&&parseInt(arrH,10)<parseInt(depH,10))ad=ad+1;d.arrDDHHMM=('0'+ad).slice(-2)+arrH;}
   var td=/\bB(7[56]\d)\/[JHML]\b/.exec(t)||/SHIP\s+\d+\s+B(75\d|76\d)/.exec(t);
   if(td)d.type=(td[1].charAt(1)==='6')?'767':'757';
   else if(/\bB76\d\b/.test(t)||/\b767\b/.test(t))d.type='767';
@@ -1067,8 +1073,6 @@ function parseRelease(t){
   var ete=/ETE[-:\s]+(\d{1,2}):(\d{2})/.exec(t);
   if(ete){d.eteH=String(+ete[1]);d.eteM=ete[2];}
   d.agate=rx(/SCHEDULED GATE\s+([A-Z]?\d+[A-Z]?)/,t);
-  var st=/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z-\d{3,4}L\s*-\s*[A-Z]{3}\/[A-Z]{4}\s+(\d{3,4})Z/.exec(t);
-  if(st){d.push=('0000'+st[1]).slice(-4);d.schedin=('0000'+st[2]).slice(-4);}
   var dist='';
   var dnm=/\bNM\s+(\d{3,5})\s+TAS\b/i.exec(t)||/\bETE[-:\s][^\n]*?\bNM\s+(\d{3,5})\b/i.exec(t);
   if(dnm)dist=dnm[1];
@@ -1155,6 +1159,7 @@ $('parsebtn').addEventListener('click',function(){
   var d=parseRelease(txt);
   if(!d.flt&&!d.orig){$('parsemsg').textContent="Couldn't read that \u2014 make sure it's the full dispatch release text.";return;}
   localStorage.setItem(DATA_KEY,JSON.stringify(d));
+  $('pastebox').value='';/* raw release (crew PII) not retained */
   $('parsemsg').textContent='';openPre(d);
 });
 
@@ -1173,8 +1178,20 @@ applyTheme();syncSettingsUI();netUpd();
         return res.text().then(function (t) { return { text: t, ts: ts }; });
       }).catch(function () { return null; });
   }
+function cardExpired(d){
+  if(!d)return false;
+  var ref=null;
+  if(d.dateDay&&d.dateMon!==''&&d.dateMon!=null&&!isNaN(+d.dateMon)){
+    var now=new Date(),y=now.getUTCFullYear(),DAY=864e5;
+    ref=Date.UTC(y,+d.dateMon,+d.dateDay,23,59,0);
+    if(ref-now.getTime()>245*DAY)ref=Date.UTC(y-1,+d.dateMon,+d.dateDay,23,59,0); /* year boundary: a "Dec" card seen in Jan */
+  }else if(d.landed)ref=d.landed;else if(d.airborne)ref=d.airborne;
+  if(ref==null)return false;
+  return (Date.now()-ref)>48*3600*1000;
+}
   function bootNormal() {
     var d = loadJSON(DATA_KEY, null);
+    if (d && cardExpired(d)) { try{localStorage.removeItem(DATA_KEY);}catch(e){} d=null; } /* auto-expire 48h after flight date */
     if (d && (d.flt || d.orig || d.dest)) { fillForm(d); showCard(d); }
     else { fillForm({}); showPaste(); }
   }
@@ -1185,6 +1202,7 @@ applyTheme();syncSettingsUI();netUpd();
       if (nd && (nd.flt || nd.orig)) {
         try { localStorage.setItem(BRIDGE_TS, String(b.ts)); } catch (e) {}
         try { localStorage.setItem(DATA_KEY, JSON.stringify(nd)); } catch (e) {}
+        try { caches.open('afhd-bridge').then(function(c){ c.delete(BRIDGE_URL); }); } catch (e) {} /* raw release not left cached */
         fillForm(nd); showCard(nd); return;
       }
     }
