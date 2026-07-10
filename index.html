@@ -182,8 +182,11 @@ body[data-inflight] .wrap{padding-top:6px;}
 body[data-inflight] .callsign{font-size:clamp(58px,13.5vw,108px);}
 body[data-inflight] .dwidget{height:clamp(38px,9vw,72px);}
 body[data-inflight] .card{border-color:var(--accent);}
-.inflightbar{display:none;}
-body[data-inflight] .inflightbar{display:flex;}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;min-width:48px;padding:0 12px;}
+.iconbtn svg{display:block;}
+.ifgear{display:none;position:fixed;top:10px;right:12px;z-index:40;background:none;border:0;color:var(--txt3);opacity:.55;padding:12px;cursor:pointer;}
+.ifgear:active{opacity:1;}
+body[data-inflight] .ifgear{display:block;}
 
 #settings,#infomodal,#premodal,#qedit,#updmodal{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
   justify-content:center;padding:24px 14px;overflow:auto;}
@@ -281,7 +284,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
       <strong style="font-family:var(--mono);letter-spacing:1px;font-size:15px;">EDIT CARD</strong>
       <span class="sp"></span>
       <button class="btn sm go" id="formdone">DONE ›</button>
-      <button class="btn sm" id="gear2">SETTINGS</button>
+      <button class="btn sm iconbtn" id="gear2" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg></button>
     </div>
 
     <div class="formhead">Flight</div>
@@ -368,15 +371,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 
 <!-- ============ CARD ============ -->
 <section id="cardscreen" class="screen">
+  <button class="ifgear" id="ifgear" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg></button>
   <div class="wrap">
     <div class="bar editchrome">
       <button class="btn sm" id="edit">EDIT</button>
-      <button class="btn sm" id="gear">SETTINGS</button>
       <button class="btn sm" id="inflight">IN-FLIGHT</button>
       <span class="sp"></span>
       <span class="pill" id="netpill"><span class="dot"></span><span id="nettext">OFFLINE</span></span>
+      <button class="btn sm iconbtn" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.03 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.01a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01A1.7 1.7 0 0 0 21 10.91H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.09z"/></svg></button>
     </div>
-    <div class="bar inflightbar"><span class="sp"></span><button class="btn sm" id="exitinflight">EXIT IN-FLIGHT</button></div>
 
     <div class="card">
       <div class="cardtop">
@@ -545,10 +548,10 @@ $('s_dim').addEventListener('input',function(){settings.dim=parseFloat(this.valu
 $('s_dim').addEventListener('change',saveSettings);
 $('s_inflight').addEventListener('click',function(){settings.inflight=!settings.inflight;saveSettings();applyTheme();syncSettingsUI();});
 $('inflight').addEventListener('click',function(){settings.inflight=true;saveSettings();applyTheme();syncSettingsUI();});
-$('exitinflight').addEventListener('click',function(){settings.inflight=false;saveSettings();applyTheme();syncSettingsUI();});
 function openSettings(){syncSettingsUI();$('settings').classList.add('on');}
 $('gear').addEventListener('click',openSettings);
 $('gear2').addEventListener('click',openSettings);
+$('ifgear').addEventListener('click',openSettings);
 $('s_close').addEventListener('click',function(){$('settings').classList.remove('on');});
 $('settings').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
 /* ---- auto wheels-off + touchdown detection (opt-in; GPS groundspeed/altitude + accelerometer vibration) ---- */
@@ -1029,9 +1032,27 @@ function startTick(d){
 });})();
 
 var wl=null;
-async function reqWake(){try{if('wakeLock' in navigator)wl=await navigator.wakeLock.request('screen');}catch(e){}}
-function relWake(){try{if(wl){wl.release();wl=null;}}catch(e){}}
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&$('cardscreen').classList.contains('on'))reqWake();});
+var wlWanted=false;
+function wakeStatus(s,col){var el=$('s_wake');if(el){el.textContent=s;el.style.color=col||'var(--cyan)';}}
+async function reqWake(){
+  wlWanted=true;
+  if(!('wakeLock' in navigator)){wakeStatus('N/A','var(--txt3)');return;}
+  if(wl)return;
+  try{
+    wl=await navigator.wakeLock.request('screen');
+    wakeStatus('ACTIVE','var(--green)');
+    wl.addEventListener('release',function(){
+      wl=null;
+      if(wlWanted){wakeStatus('RETRY\u2026','var(--amber)');
+        if(document.visibilityState==='visible')reqWake();}
+      else wakeStatus('OFF','var(--txt3)');
+    });
+  }catch(e){wl=null;wakeStatus('TAP SCREEN','var(--amber)');/* iOS often needs a user gesture; pointer handler below retries */}
+}
+function relWake(){wlWanted=false;try{if(wl){wl.release();wl=null;}}catch(e){}wakeStatus('OFF','var(--txt3)');}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&wlWanted)reqWake();});
+window.addEventListener('pageshow',function(){if(wlWanted)reqWake();});
+document.addEventListener('pointerdown',function(){if(wlWanted&&!wl)reqWake();},{passive:true});
 
 function netUpd(){var on=navigator.onLine,p=$('netpill');
   if(on){p.classList.add('online');$('nettext').textContent='ONLINE';}else{p.classList.remove('online');$('nettext').textContent='OFFLINE';}}
