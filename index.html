@@ -543,7 +543,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v65'; /* keep in step with sw.js CACHE */
+var BUILD='v66'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -1181,7 +1181,7 @@ function parseRelease(t){
       var l2=tk[tk.length-2];if(/^[A-Z]{2,}\d[A-Z]?$/.test(l2))d.star=l2;}}
   var ltm=/MAX FDP LIMIT:\s*(\d+)\/(\d{4})Z/.exec(t);if(ltm){d.lattDay=+ltm[1];d.latt=ltm[2];}
   var lxm=/MAX FDP LIMIT WITH EXTENSION APPLIED:\s*(\d+)\/(\d{4})Z/.exec(t);if(lxm){d.lattxDay=+lxm[1];d.lattx=lxm[2];}
-  var mel,mre=/^\s*\d{2}\s+([A-Z]\d{2}-\d{2}-\d{2})\s+-\s/gm;
+  var mel,mre=/^\s*\d{2}\s+([A-Z]\d{2}-\d{2}-\d{2}[A-Z]?)\s+-\s/gm;
   while((mel=mre.exec(t)))d.mels.push(mel[1]);
   var p,pre=/PLT\s+([A-Z])\s+(\d{6,7})\s+([A-Z][A-Z]+),\s*([A-Z][A-Z ]*?)\s*(?:\n|$|\s{2,})/g;
   while((p=pre.exec(t))){var role=p[1]==='A'?'CA':(p[1]==='B'?'FO':p[1]);
