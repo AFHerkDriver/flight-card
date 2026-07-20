@@ -203,9 +203,9 @@ body[data-inflight] .card{border-color:var(--accent);}
 .ifgear:active{opacity:1;}
 body[data-inflight] .ifgear{display:block;}
 
-#settings,#infomodal,#premodal,#qedit,#updmodal{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
+#settings,#infomodal,#premodal,#qedit,#updmodal,#cdmodal{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.55);display:none;align-items:flex-start;
   justify-content:center;padding:24px 14px;overflow:auto;}
-#settings.on,#infomodal.on,#premodal.on,#qedit.on,#updmodal.on{display:flex;}
+#settings.on,#infomodal.on,#premodal.on,#qedit.on,#updmodal.on,#cdmodal.on{display:flex;}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:520px;padding:18px;}
 .sheet h3{font-family:var(--mono);font-size:14px;letter-spacing:1px;margin:0 0 14px;color:var(--txt);text-transform:uppercase;}
 .routetext{font-family:var(--mono);font-size:clamp(14px,3vw,18px);line-height:1.8;color:var(--txt);word-break:break-word;
@@ -247,7 +247,7 @@ body[data-inflight] .ifgear{display:block;}
 .fmvalid{font:600 11px/1 var(--mono);letter-spacing:1px;color:var(--txt3);margin:-2px 0 8px;}
 .fmline{font:600 13px/1.4 var(--mono);color:var(--txt2);background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;margin-bottom:5px;word-break:break-word;}
 .fmline.wxhi{color:var(--txt);border-color:var(--green);}
-#c_pax,#c_agate,#c_o2,#c_rsv{cursor:pointer;}
+#c_pax,#c_agate,#c_o2,#c_rsv,#c_altn{cursor:pointer;}
 #c_orig,#c_dest{cursor:pointer;}
 .subhead{font:700 11px/1.2 var(--mono);letter-spacing:1.5px;color:var(--cyan);text-transform:uppercase;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line2);}
 .subhead:first-child{margin-top:0;}
@@ -492,6 +492,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
   </div>
 </div>
 
+<div id="cdmodal">
+  <div class="sheet" style="max-width:360px;text-align:center;">
+    <h3 style="color:var(--green);">Engine Cool Down Complete</h3>
+    <div class="note" style="margin:10px 0 16px;">3 minutes elapsed since touchdown.</div>
+    <div class="bar"><button class="btn go" id="cd_ok" style="flex:1;">Done</button></div>
+  </div>
+</div>
+
 <div id="qedit">
   <div class="sheet" style="max-width:360px;">
     <h3 id="qe_label">Edit</h3>
@@ -535,7 +543,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v63'; /* keep in step with sw.js CACHE */
+var BUILD='v65'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -791,6 +799,8 @@ function qeSave(){
   try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}
   renderCard(CURRENT);$('qedit').classList.remove('on');
 }
+$('cd_ok').addEventListener('click',function(){$('cdmodal').classList.remove('on');});
+$('cdmodal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
 $('qe_save').addEventListener('click',qeSave);
 $('qe_cancel').addEventListener('click',function(){$('qedit').classList.remove('on');});
 $('qedit').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
@@ -888,6 +898,16 @@ function openDelay(){
   openInfo('Delay fuel',html,copy);
 }
 $('c_rsv').addEventListener('click',openDelay);
+function openAltn(){
+  var a=(CURRENT.altns||[]);
+  if(!a.length){openInfo('Alternates','<div class="iempty">No alternate details \u2014 re-parse the latest release.</div>','');return;}
+  var html='',copy='';
+  a.forEach(function(x){
+    html+='<div class="kv"><div class="k">'+esc(x.code)+'</div><div class="v">'+esc(x.icao)+(x.fl?(' \u00b7 FL'+esc(x.fl)):'')+(x.time?(' \u00b7 :'+esc(x.time)):'')+(x.fuel?(' \u00b7 '+esc(x.fuel)+' lb'):'')+'</div></div>';
+    copy+=x.code+' '+x.icao+(x.fl?' FL'+x.fl:'')+(x.time?' :'+x.time:'')+(x.fuel?' '+x.fuel+' lb':'')+'\n';});
+  openInfo('Alternates',html,copy.trim());
+}
+var ca=$('c_altn');if(ca)ca.addEventListener('click',openAltn);
 
 /* info modal (generic) */
 function fmtPhone(p){p=(p||'').replace(/\D/g,'');return p.length===10?(p.slice(0,3)+'-'+p.slice(3,6)+'-'+p.slice(6)):p;}
@@ -1029,7 +1049,12 @@ function startTick(d){
     var lbl=$('c_117lbl');
     if(d.airborne){
       if(d.landed){var ft=d.landed-d.airborne;clk.textContent=fmtElapsed(ft);clk.className='clock is-green';
-        if(lbl)lbl.textContent='FLIGHT TIME';sub.innerHTML='off <b>'+zHHMM(d.airborne)+'Z</b> · on <b>'+zHHMM(d.landed)+'Z</b>';return;}
+        if(lbl)lbl.textContent='FLIGHT TIME';
+        var base='off <b>'+zHHMM(d.airborne)+'Z</b> · on <b>'+zHHMM(d.landed)+'Z</b>';
+        var cdRem=180000-(Date.now()-d.landed);
+        if(cdRem>0){var cs=Math.ceil(cdRem/1000);base+=' · <span style="color:var(--amber);">cool '+Math.floor(cs/60)+':'+('0'+(cs%60)).slice(-2)+'</span>';}
+        else if(!d.cdone){d.cdone=1;try{localStorage.setItem(DATA_KEY,JSON.stringify(d));}catch(e){}var cm=$('cdmodal');if(cm)cm.classList.add('on');}
+        sub.innerHTML=base;return;}
       var elp=Date.now()-d.airborne;clk.textContent=fmtElapsed(elp);clk.className='clock is-green';
       if(lbl)lbl.textContent='AIRBORNE · flight time';sub.innerHTML='off <b>'+zHHMM(d.airborne)+'Z</b>';return;}
     if(lbl)lbl.textContent='FAR 117 · latest T/O';
@@ -1051,7 +1076,7 @@ function startTick(d){
 (function(){var c=$('c_clock');if(!c)return;c.addEventListener('click',function(){
   if(!CURRENT.airborne){ if(confirm('Mark airborne now and start the flight-time count-up?')){CURRENT.airborne=Date.now();try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}disarmAuto();if(settings.autoto)armAuto();} }
   else if(!CURRENT.landed){ if(confirm('Mark landed now and stop the flight timer?')){CURRENT.landed=Date.now();try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}disarmAuto();} }
-  else { if(confirm('Reset the flight timer — back to the FAR 117 countdown?')){CURRENT.airborne=0;CURRENT.landed=0;try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}if(settings.autoto)armAuto();} }
+  else { if(confirm('Reset the flight timer — back to the FAR 117 countdown?')){CURRENT.airborne=0;CURRENT.landed=0;CURRENT.cdone=0;try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}if(settings.autoto)armAuto();} }
 });})();
 
 var wl=null;
@@ -1086,7 +1111,7 @@ function rx(re,t,i){var x=re.exec(t);return x?x[i==null?1:i]:'';}
 function monIdx(s){return ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf((s||'').toUpperCase());}
 function parseRelease(t){
   t=(t||'').replace(/\r/g,'');
-  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',pushDayOff:0,dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
+  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',pushDayOff:0,altns:[],dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
     block:'',minto:'',land:'',rsv:'',route:'',sid:'',star:'',elev:'',altn:'',altf:'',
     togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',intl:false,airborne:0,landed:0};
   var fl=/ATC\/FMS FLT NO\s*-\s*[A-Z]{2,3}\s*(\d+)/.exec(t)||/\bFLT\s+0*(\d+)\//.exec(t)||/\bDAL\s+0*(\d+)\//.exec(t);
@@ -1140,10 +1165,17 @@ function parseRelease(t){
   if(tlw){d.tlwStart=tlw[1];d.tlwEnd=tlw[2];}
   var el=/ELEVATION\s+[A-Z]{3}\/[A-Z]{4}\s+(\d+)\s*FT\s+[A-Z]{3}\/[A-Z]{4}\s+(\d+)\s*FT/.exec(t);
   if(el)d.elev=el[2];
-  var al=/DEST ALTN:\s*([A-Z]{3,4}|NONE)/.exec(t);
-  if(al&&al[1]!=='NONE')d.altn=al[1];
-  var rt=/ELEVATION[^\n]*\n\s*\n([\s\S]*?)\n\s*\nATC\/FMS/.exec(t);
-  if(rt)d.route=rt[1].replace(/\s+/g,' ').trim();
+  d.altns=[];var alre=/DEST ALTN:\s*([A-Z]{3})\/([A-Z]{4})/g,alm;
+  while((alm=alre.exec(t)))if(!d.altns.some(function(x){return x.code===alm[1];}))d.altns.push({code:alm[1],icao:alm[2],fl:'',time:'',fuel:''});
+  var afre=/ALTN:\s*([A-Z]{3})\/[A-Z]{4}\s+FL(\d{2,3})\s+:(\d{1,3})\/\s*(\d{3,6})/g,afm;
+  while((afm=afre.exec(t)))d.altns.forEach(function(x){if(x.code===afm[1]){x.fl=afm[2];x.time=afm[3];x.fuel=afm[4];}});
+  if(d.altns.length)d.altn=d.altns.map(function(x){return x.code;}).join(' ');
+  else{var al=/DEST ALTN:\s*([A-Z]{3,4}|NONE)/.exec(t);if(al&&al[1]!=='NONE')d.altn=al[1];}
+  d.route='';
+  if(d.orig&&d.dest){var rre=new RegExp('(?:^|\\n)[\\f ]*('+d.orig+'\\s[\\s\\S]*?\\b'+d.dest+')\\b');
+    var rm2=rre.exec(t);if(rm2)d.route=rm2[1].replace(/\s+/g,' ').trim();}
+  if(!d.route){var rt=/ELEVATION[^\n]*\n\s*\n([\s\S]*?)\n\s*\nATC\/FMS/.exec(t);
+    if(rt)d.route=rt[1].replace(/\s+/g,' ').trim();}
   if(d.route){var tk=d.route.split(' ');
     if(tk.length>2){if(/^[A-Z]{2,}\d[A-Z]?$/.test(tk[1]))d.sid=tk[1];
       var l2=tk[tk.length-2];if(/^[A-Z]{2,}\d[A-Z]?$/.test(l2))d.star=l2;}}
@@ -1154,7 +1186,8 @@ function parseRelease(t){
   var p,pre=/PLT\s+([A-Z])\s+(\d{6,7})\s+([A-Z][A-Z]+),\s*([A-Z][A-Z ]*?)\s*(?:\n|$|\s{2,})/g;
   while((p=pre.exec(t))){var role=p[1]==='A'?'CA':(p[1]==='B'?'FO':p[1]);
     d.pilots.push({role:role,last:p[3],name:p[3],first:(p[4]||'').trim(),emp:p[2].slice(-6)});}
-  d.intl=/\bINTERNATIONAL\b/.test(t);
+  var opk=/\*\s*FLT\s+\d{3,4}\/\d{1,2}[A-Z]{3}[^\n]*?\b(DOMESTIC|INTERNATIONAL|FLAG)\b/.exec(t);
+  d.intl=!!(opk&&opk[1]!=='DOMESTIC'); /* FLAG = international ops; airport names in NOTAMs must not flip this */
   var f,fre=/F\/A\s+([A-Z])\s+(\d{6,7})\s+([A-Z]+)\s+([A-Z][A-Z ]*?)(?:-{2,}|\s{2,}|$)/gm;
   while((f=fre.exec(t))){var fpos=(f[1]==='A')?((d.intl||d.type==='767')?'PUR':'LD'):'';d.fas.push({pos:fpos,emp:f[2].slice(-6),first:f[3],last:f[4].trim()});}
   var dm=/([A-Z]+(?:-[A-Z]+)+)\s+DESK-([A-Z0-9]+)\s+PHONE-(\d+)(?:\*(\d+))?/.exec(t);
