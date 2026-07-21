@@ -106,6 +106,11 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .pushpill b{color:var(--txt);font-weight:600;}
 .gate{font-family:var(--mono);font-size:clamp(12px,2.5vw,15px);color:var(--txt2);}
 .gate b{color:var(--txt);font-weight:600;}
+.offon{font-family:var(--mono);min-height:44px;min-width:104px;display:flex;flex-direction:column;justify-content:center;gap:2px;cursor:pointer;-webkit-user-select:none;user-select:none;border-radius:8px;}
+.offon.ct-r{align-items:flex-end;}
+.offon .oolbl{font-size:clamp(11px,2.3vw,13px);color:var(--txt3);letter-spacing:1px;line-height:1;}
+.offon .ooz{font-size:clamp(18px,3.8vw,24px);font-weight:600;color:var(--txt);line-height:1.05;}
+.offon .ool{font-size:clamp(12px,2.5vw,15px);color:var(--txt2);line-height:1;}
 .ct-l{justify-self:start;text-align:left;}
 .ct-c{justify-self:center;text-align:center;}
 .ct-r{justify-self:end;text-align:right;}
@@ -404,6 +409,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
         <div class="gate ct-l">GATE <b id="c_dgate">—</b></div>
         <button class="ete ct-c etetog" id="c_ete" type="button" data-mode="ete">—</button>
         <div class="gate ct-r">GATE <b id="c_agate">—</b></div>
+        <div class="offon ct-l" id="c_off" role="button" tabindex="0" aria-label="Show off-blocks time"></div>
+        <div class="ct-c"></div>
+        <div class="offon ct-r" id="c_on" role="button" tabindex="0" aria-label="Show on-blocks time"></div>
       </div>
 
       <div class="pushpill" id="c_push" style="display:none;">—</div>
@@ -543,7 +551,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v66'; /* keep in step with sw.js CACHE */
+var BUILD='v67'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
@@ -737,6 +745,9 @@ function renderCardCore(d){
   ee.textContent=(ee.dataset.mode==='dist')?_dist:_ete;
   $('c_dgate').textContent=d.dgate||'—';
   $('c_agate').textContent=d.agate||'—';
+  (function(){var oe=$('c_off'),ne=$('c_on');
+    if(oe){oe.dataset.z=d.offZ||'';oe.dataset.l=d.offL||'';oe.dataset.lbl='OFF';oe.classList.remove('shown');oe.innerHTML='';}
+    if(ne){ne.dataset.z=d.onZ||'';ne.dataset.l=d.onL||'';ne.dataset.lbl='ON';ne.classList.remove('shown');ne.innerHTML='';}})();
   $('c_sid').textContent=d.sid||'—';
   $('c_star').textContent=d.star||'—';
   $('c_elev').textContent=d.elev?(d.elev+' FT'):'—';
@@ -1073,6 +1084,8 @@ function startTick(d){
   upd();tickTimer=setInterval(upd,1000);
 }
 (function(){var e=document.getElementById('c_ete');if(e)e.addEventListener('click',function(){var m=(e.dataset.mode==='dist')?'ete':'dist';e.dataset.mode=m;e.textContent=(m==='dist')?(e.dataset.dist||'—'):(e.dataset.ete||'—');});})();
+(function(){function tog(el){if(!el)return;if(el.classList.contains('shown')){el.classList.remove('shown');el.innerHTML='';return;}var z=el.dataset.z||'';if(!z)return;var l=el.dataset.l||'',lb=el.dataset.lbl||'';el.innerHTML='<span class="oolbl">'+lb+'</span><span class="ooz">'+z+'Z</span>'+(l?'<span class="ool">'+l+'L</span>':'');el.classList.add('shown');}
+['c_off','c_on'].forEach(function(id){var el=document.getElementById(id);if(!el)return;el.addEventListener('click',function(){tog(el);});el.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();tog(el);}});});})();
 (function(){var c=$('c_clock');if(!c)return;c.addEventListener('click',function(){
   if(!CURRENT.airborne){ if(confirm('Mark airborne now and start the flight-time count-up?')){CURRENT.airborne=Date.now();try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}disarmAuto();if(settings.autoto)armAuto();} }
   else if(!CURRENT.landed){ if(confirm('Mark landed now and stop the flight timer?')){CURRENT.landed=Date.now();try{localStorage.setItem(DATA_KEY,JSON.stringify(CURRENT));}catch(e){}disarmAuto();} }
@@ -1111,7 +1124,7 @@ function rx(re,t,i){var x=re.exec(t);return x?x[i==null?1:i]:'';}
 function monIdx(s){return ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf((s||'').toUpperCase());}
 function parseRelease(t){
   t=(t||'').replace(/\r/g,'');
-  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',pushDayOff:0,altns:[],dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
+  var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',offZ:'',offL:'',onZ:'',onL:'',pushDayOff:0,altns:[],dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
     block:'',minto:'',land:'',rsv:'',route:'',sid:'',star:'',elev:'',altn:'',altf:'',
     togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',intl:false,airborne:0,landed:0};
   var fl=/ATC\/FMS FLT NO\s*-\s*[A-Z]{2,3}\s*(\d+)/.exec(t)||/\bFLT\s+0*(\d+)\//.exec(t)||/\bDAL\s+0*(\d+)\//.exec(t);
@@ -1131,6 +1144,8 @@ function parseRelease(t){
     var off=((zm-lm)+2880)%1440;
     d.pushDayOff=(off<=780&&zm<lm)?1:0;} /* western tz: Zulu wrapped past midnight -> dep Zulu date = local date + 1 */
   var pl=/PLANNED\s+(\d{4})Z[^\n]*?(\d{4})Z/.exec(t);
+  var plf=/PLANNED\s+(\d{4})Z(?:-(\d{4})L)?[^\n]*?(\d{4})Z(?:-(\d{4})L)?/.exec(t);
+  if(plf){d.offZ=plf[1]||'';d.offL=plf[2]||'';d.onZ=plf[3]||'';d.onL=plf[4]||'';}
   var depH=pl?pl[1]:((/SCHEDULED\s+[A-Z]{3}\/[A-Z]{4}\s+(\d{4})Z/.exec(t)||[])[1]||'');
   var arrH=pl?pl[2]:(d.schedin||'');
   if(arrH){var ad=(d.dateDay||new Date().getUTCDate())+(d.pushDayOff||0);if(depH&&parseInt(arrH,10)<parseInt(depH,10))ad=ad+1;d.arrDDHHMM=('0'+ad).slice(-2)+arrH;}
