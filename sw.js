@@ -18,52 +18,55 @@ self.addEventListener('message', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE).map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE && k !== 'afhd-bridge').map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
-function isGoodPage(resp){
-  return resp && resp.ok && resp.status === 200 &&
-    (resp.headers.get('content-type') || '').indexOf('text/html') !== -1;
+function isGoodPage(res) {
+  return !!res
+    && res.status === 200
+    && res.type !== 'opaqueredirect'
+    && !res.redirected
+    && /text\/html/i.test(res.headers.get('content-type') || '');
 }
 
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
+  if (new URL(req.url).origin !== location.origin) return;
+  if (new URL(req.url).pathname === '/__afhd_bridge_release__') return; /* never touch the bridge key */
 
-  const isPage = req.mode === 'navigate' ||
-    (req.headers.get('accept') || '').indexOf('text/html') !== -1;
-
-  if (isPage) {
-    // cache-first for the shell, with a guarded background refresh
-    e.respondWith(
-      caches.open(CACHE).then(c =>
-        c.match(PAGE).then(cached => {
-          const net = fetch(req).then(resp => {
-            if (isGoodPage(resp)) c.put(PAGE, resp.clone());
-            return resp;
-          }).catch(() => null);
-          return cached || net.then(r => (isGoodPage(r) ? r : caches.match(PAGE))) ||
-            caches.match(PAGE);
-        })
-      )
-    );
+  if (req.mode === 'navigate') {
+    e.respondWith((async () => {
+      const cached = (await caches.match(PAGE)) || (await caches.match('./'));
+      const netPromise = fetch(req).then(async net => {
+        if (isGoodPage(net)) {
+          try { const c = await caches.open(CACHE); await c.put(PAGE, net.clone()); } catch (_) {}
+        }
+        return net;
+      }).catch(() => null);
+      if (cached) { netPromise; return cached; }
+      const net = await netPromise;
+      return (net && isGoodPage(net)) ? net : Response.error();
+    })());
     return;
   }
 
-  // assets: cache-first, fall back to network then cache
-  e.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(resp => {
-      if (resp && resp.ok && resp.status === 200) {
-        const copy = resp.clone();
-        caches.open(CACHE).then(c => c.put(req, copy));
+  e.respondWith((async () => {
+    const hit = await caches.match(req);
+    if (hit) return hit;
+    try {
+      const net = await fetch(req);
+      if (net && net.status === 200 && !net.redirected) {
+        const c = await caches.open(CACHE);
+        c.put(req, net.clone());
       }
-      return resp;
-    }).catch(() => caches.match(PAGE)))
-  );
+      return net;
+    } catch (_) {
+      return caches.match(PAGE);
+    }
+  })());
 });

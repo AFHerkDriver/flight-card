@@ -102,6 +102,10 @@ input::placeholder,textarea::placeholder{color:var(--txt3);}
 .pushpill{width:fit-content;margin:0 auto 8px;font-family:var(--mono);font-size:clamp(12px,2.5vw,15px);color:var(--cyan);background:var(--panel2);border:1px solid var(--line2);border-radius:999px;padding:5px 14px;text-align:center;}
 .pushpill.soon{color:var(--amber);border-color:var(--amber);}
 .pushpill.tgt{color:var(--green);border-color:var(--green);}
+.pushpill.lg-early{color:var(--green);border-color:var(--green);}
+.pushpill.lg-in{color:var(--blue);border-color:var(--blue);}
+.pushpill.lg-late{color:var(--amber);border-color:var(--amber);}
+.pushpill.lg-vlate{color:var(--red);border-color:var(--red);}
 .setver{text-align:center;font:600 11px/1 var(--mono);letter-spacing:1px;color:var(--txt3);margin-top:16px;}
 .pushpill b{color:var(--txt);font-weight:600;}
 .gate{font-family:var(--mono);font-size:clamp(12px,2.5vw,15px);color:var(--txt2);}
@@ -542,6 +546,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
     <div class="srow"><span class="k">In-flight mode</span><button class="toggle" id="s_inflight" aria-pressed="false">OFF</button></div>
     <div class="srow"><span class="k">Screen wake lock</span><span class="k" id="s_wake" style="color:var(--cyan);">Auto</span></div>
     <div class="srow"><span class="k">Auto wheels-off (GPS+motion)</span><button class="toggle" id="s_autoto" aria-pressed="false">OFF</button></div>
+    <div class="srow"><span class="k">Landing grade (GPS vs window)</span><button class="toggle" id="s_ldggrade" aria-pressed="false">OFF</button></div>
     <div class="setver">Flight Card</div>
     <div class="setver" id="s_diag" style="margin-top:4px;"></div>
     <div class="bar" style="margin-top:16px;"><button class="btn" id="s_close" style="flex:1;">Done</button></div>
@@ -551,12 +556,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;heigh
 <script>
 "use strict";
 var DATA_KEY='flightcard_data', SET_KEY='flightcard_settings';
-var BUILD='v67'; /* keep in step with sw.js CACHE */
+var BUILD='v68'; /* keep in step with sw.js CACHE */
 var $=function(id){return document.getElementById(id);};
 var root=document.documentElement;
 var CURRENT={};
 
-var settings=loadJSON(SET_KEY,{theme:'night',red:false,dim:0,inflight:false,autoto:false});
+var settings=loadJSON(SET_KEY,{theme:'night',red:false,dim:0,inflight:false,autoto:false,ldggrade:false});
 function loadJSON(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v||d;}catch(e){return d;}}
 function saveSettings(){localStorage.setItem(SET_KEY,JSON.stringify(settings));}
 function applyTheme(){
@@ -574,6 +579,7 @@ function syncSettingsUI(){
   $('s_dim').value=settings.dim||0;
   var inf=$('s_inflight');inf.setAttribute('aria-pressed',!!settings.inflight);inf.textContent=settings.inflight?'ON':'OFF';
   var at=$('s_autoto');if(at){at.setAttribute('aria-pressed',!!settings.autoto);at.textContent=settings.autoto?'ON':'OFF';}
+  var lg=$('s_ldggrade');if(lg){lg.setAttribute('aria-pressed',!!settings.ldggrade);lg.textContent=settings.ldggrade?'ON':'OFF';}
 }
 $('s_theme').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;settings.theme=b.dataset.v;saveSettings();applyTheme();syncSettingsUI();});
 $('s_red').addEventListener('click',function(){settings.red=!settings.red;saveSettings();applyTheme();syncSettingsUI();});
@@ -581,7 +587,7 @@ $('s_dim').addEventListener('input',function(){settings.dim=parseFloat(this.valu
 $('s_dim').addEventListener('change',saveSettings);
 $('s_inflight').addEventListener('click',function(){settings.inflight=!settings.inflight;saveSettings();applyTheme();syncSettingsUI();});
 $('inflight').addEventListener('click',function(){settings.inflight=true;saveSettings();applyTheme();syncSettingsUI();});
-function openSettings(){syncSettingsUI();$('settings').classList.add('on');var dg=$('s_diag');if(dg){var d=CURRENT||{};var tw=(d.tlwStart&&d.tlwEnd)?('TLW '+d.tlwStart+'\u2013'+d.tlwEnd+'Z'):'TLW not parsed';var ar=d.arrDDHHMM?('arr '+d.arrDDHHMM+'Z'):'arr \u2014';var sn=(typeof AUTO!=='undefined'&&AUTO.armed)?('sensing armed \u00b7 '+AUTO.phase):'sensing off';dg.textContent=tw+' \u00b7 '+ar+' \u00b7 '+sn;}}
+function openSettings(){syncSettingsUI();$('settings').classList.add('on');var dg=$('s_diag');if(dg){var d=CURRENT||{};var tw=(d.tlwStart&&d.tlwEnd)?('TLW '+d.tlwStart+'\u2013'+d.tlwEnd+'Z'):'TLW not parsed';var ar=d.arrDDHHMM?('arr '+d.arrDDHHMM+'Z'):'arr \u2014';var sn=(typeof AUTO!=='undefined'&&AUTO.armed)?('sensing armed \u00b7 '+AUTO.phase):'sensing off';dg.textContent=tw+' \u00b7 '+ar+' \u00b7 '+sn+(settings.ldggrade?(' · dest '+((d.destLat!=null)?'ok':'--')+' fix '+((FIX&&FIX.ts&&Date.now()-FIX.ts<120000)?'ok':'--')):'');}}
 $('gear').addEventListener('click',openSettings);
 $('gear2').addEventListener('click',openSettings);
 $('ifgear').addEventListener('click',openSettings);
@@ -589,6 +595,7 @@ $('s_close').addEventListener('click',function(){$('settings').classList.remove(
 $('settings').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
 /* ---- auto wheels-off + touchdown detection (opt-in; GPS groundspeed/altitude + accelerometer vibration) ---- */
 var AUTO={armed:false,phase:'idle',watchId:null,motionOn:false,motionGranted:false,spdKt:0,vibLevel:0,vibPeak:0,vibAir:0,magMean:null,candidate:0,candidate2:0,altBase:null,sawFast:false};
+var FIX={lat:null,lon:null,gs:0,ts:0}; /* latest GPS fix for landing-grade estimate */
 var TO_ARM_KT=60, TO_LIFT_KT=110, TO_VIB_DROP=0.45, TO_VIB_HOLD=1200, TO_VIB_FLOOR=0.25, TO_ALT_M=15;
 var LD_SPD_MAX=200, LD_SPD_MIN=35, LD_VIB_RISE=3, LD_VIB_FLOOR=0.30, LD_VIB_HOLD=700, LD_JOLT=1.4;
 function toReqMotion(){
@@ -627,6 +634,7 @@ function toGps(p){
   if(!AUTO.armed)return;
   var c=p.coords||{},now=Date.now();
   var kt=(c.speed!=null&&c.speed>=0)?c.speed*1.94384:AUTO.spdKt; AUTO.spdKt=kt;
+  if(c.latitude!=null&&c.longitude!=null){FIX.lat=c.latitude;FIX.lon=c.longitude;FIX.ts=now;if(kt>0)FIX.gs=(FIX.gs>0?FIX.gs*0.7+kt*0.3:kt);}
   var alt=(c.altitude!=null)?c.altitude:null;
   if(AUTO.phase==='idle'){ if(kt>=TO_ARM_KT){AUTO.phase='roll';AUTO.vibPeak=0;AUTO.candidate=0;AUTO.altBase=alt;} }
   else if(AUTO.phase==='roll'){
@@ -635,11 +643,11 @@ function toGps(p){
     if(kt<25)AUTO.phase='idle';
   } else if(AUTO.phase==='air'){
     if(kt>120)AUTO.sawFast=true;
-    if(!AUTO.motionGranted&&AUTO.sawFast&&kt<LD_SPD_MIN)toTouchdown(now);  /* GPS-only fallback: decel through rollout */
+    if(settings.autoto&&!AUTO.motionGranted&&AUTO.sawFast&&kt<LD_SPD_MIN)toTouchdown(now);  /* GPS-only fallback: decel through rollout */
   }
 }
 function armAuto(){
-  if(!settings.autoto||AUTO.armed||CURRENT.landed)return;
+  if((!settings.autoto&&!settings.ldggrade)||AUTO.armed||CURRENT.landed)return;
   AUTO.armed=true;AUTO.spdKt=0;AUTO.vibLevel=0;AUTO.magMean=null;AUTO.candidate=0;AUTO.candidate2=0;
   if(!CURRENT.airborne){AUTO.phase='idle';AUTO.vibPeak=0;AUTO.altBase=null;}
   else{AUTO.phase='air';AUTO.vibAir=0;AUTO.sawFast=false;}
@@ -655,6 +663,11 @@ $('s_autoto').addEventListener('click',function(){
   settings.autoto=!settings.autoto;saveSettings();syncSettingsUI();
   if(settings.autoto){toReqMotion().then(function(g){AUTO.motionGranted=g;armAuto();});}
   else disarmAuto();
+});
+$('s_ldggrade').addEventListener('click',function(){
+  settings.ldggrade=!settings.ldggrade;saveSettings();syncSettingsUI();
+  if(settings.ldggrade){if(CURRENT.airborne&&!CURRENT.landed&&!AUTO.armed)armAuto();}
+  else if(!settings.autoto)disarmAuto();
 });
 
 /* ---- clipboard ---- */
@@ -1042,6 +1055,15 @@ function fmtRemain(ms){var neg=ms<0,s=Math.floor(Math.abs(ms)/1000),h=Math.floor
   var out=h>=1?(h+':'+('0'+m).slice(-2)):(('0'+m).slice(-2)+':'+('0'+ss).slice(-2));return (neg?'-':'')+out;}
 function fmtElapsed(ms){if(ms<0)ms=0;var s=Math.floor(ms/1000),hh=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;return hh+':'+('0'+mm).slice(-2)+':'+('0'+ss).slice(-2);}
 function zHHMM(ms){var dt=new Date(ms);return ('0'+dt.getUTCHours()).slice(-2)+('0'+dt.getUTCMinutes()).slice(-2);}
+function gcNM(a1,o1,a2,o2){var R=3440.065,r=Math.PI/180,dA=(a2-a1)*r,dO=(o2-o1)*r,x=Math.sin(dA/2)*Math.sin(dA/2)+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dO/2)*Math.sin(dO/2);return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));}
+function ldgEstimate(d){
+  if(!CURRENT.airborne||CURRENT.landed)return null;
+  if(FIX.ts&&(Date.now()-FIX.ts<120000)&&FIX.lat!=null&&FIX.gs>60&&d.destLat!=null&&d.destLon!=null){
+    var nm=gcNM(FIX.lat,FIX.lon,d.destLat,d.destLon);return {ms:Date.now()+(nm/FIX.gs)*3600000,src:'gps'};}
+  var em=(parseInt(d.eteH||0,10)*60)+(parseInt(d.eteM||0,10));
+  if(em>0)return {ms:CURRENT.airborne+em*60000,src:'ete'};
+  return null;
+}
 function startTick(d){
   if(tickTimer)clearInterval(tickTimer);
   var clk=$('c_clock'),sub=$('c_117sub');
@@ -1051,10 +1073,22 @@ function startTick(d){
       var twd=(d.arrDDHHMM||'').slice(0,2)||d.dateDay;
       var ws=d.tlwStart?zTarget(d.tlwStart,twd,d.dateMon):null,we=d.tlwEnd?zTarget(d.tlwEnd,twd,d.dateMon):null;
       if(ws&&we&&we.getTime()<ws.getTime())we=new Date(we.getTime()+864e5);
-      if(settings.autoto&&CURRENT.airborne&&!CURRENT.landed&&!AUTO.armed)armAuto(); /* landing sensing arms for the whole airborne phase; not gated on TLW */
+      if((settings.autoto||settings.ldggrade)&&CURRENT.airborne&&!CURRENT.landed&&!AUTO.armed)armAuto(); /* landing sensing arms for the whole airborne phase; not gated on TLW */
       if(ws&&we&&nowP.getTime()>=ws.getTime()-40*60000&&nowP.getTime()<=we.getTime()){
-        pe.style.display='';pe.className='pushpill tgt';
-        pe.innerHTML='LDG <b>'+('0000'+d.tlwStart).slice(-4)+'–'+('0000'+d.tlwEnd).slice(-4)+'Z</b>';}
+        pe.style.display='';
+        var brk='LDG <b>'+('0000'+d.tlwStart).slice(-4)+'–'+('0000'+d.tlwEnd).slice(-4)+'Z</b>';
+        if(settings.ldggrade){
+          var est=ldgEstimate(d),cls='pushpill tgt',tail='';
+          if(est){
+            if(est.ms<ws.getTime())cls='pushpill lg-early';
+            else if(est.ms<=we.getTime())cls='pushpill lg-in';
+            else if(est.ms<=we.getTime()+600000)cls='pushpill lg-late';
+            else cls='pushpill lg-vlate';
+            tail=' · '+zHHMM(est.ms)+'Z'+(est.src==='ete'?'*':'');
+          }
+          pe.className=cls;pe.innerHTML=brk+tail;
+        }else{pe.className='pushpill tgt';pe.innerHTML=brk;}
+      }
       else if(pt&&pr>0){pe.style.display='';pe.className='pushpill'+(pr/60000<=10?' soon':'');pe.innerHTML='PUSH <b>'+fmtZ(d.push)+'</b> · '+fmtRemain(pr);}
       else pe.style.display='none';}
     var lbl=$('c_117lbl');
@@ -1126,7 +1160,7 @@ function parseRelease(t){
   t=(t||'').replace(/\r/g,'');
   var d={flt:'',type:'757',orig:'',dest:'',eteH:'',eteM:'',dgate:'',agate:'',push:'',schedin:'',offZ:'',offL:'',onZ:'',onL:'',pushDayOff:0,altns:[],dist:'',dateDay:'',dateMon:'',lattDay:'',lattxDay:'',
     block:'',minto:'',land:'',rsv:'',route:'',sid:'',star:'',elev:'',altn:'',altf:'',
-    togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',intl:false,airborne:0,landed:0};
+    togw:'',ldgw:'',pax:'',hold:'',o2:'',atis:'',safe:'',delayFuel:'',delayAt:'',tlwStart:'',tlwEnd:'',latt:'',lattx:'',mels:[],pilots:[],fas:[],dispName:'',dispDesk:'',dispPhone:'',dispExt:'',dispRemarks:'',crzfl:'',ci:'',rptpts:[],arptRemarks:'',cityRemarks:'',rls:'',wxOrig:[],wxDestFcst:null,arrDDHHMM:'',destLat:null,destLon:null,intl:false,airborne:0,landed:0};
   var fl=/ATC\/FMS FLT NO\s*-\s*[A-Z]{2,3}\s*(\d+)/.exec(t)||/\bFLT\s+0*(\d+)\//.exec(t)||/\bDAL\s+0*(\d+)\//.exec(t);
   if(fl)d.flt=fl[1];
   var rl=/\bRLS\s+(\d+)/.exec(t);if(rl)d.rls=rl[1];
@@ -1154,6 +1188,7 @@ function parseRelease(t){
   else if(/\bB76\d\b/.test(t)||/\b767\b/.test(t))d.type='767';
   var od=/[A-Z]{3}\/([A-Z]{4})\/[A-Z][A-Z .']*?\s*-\s*[A-Z]{3}\/([A-Z]{4})\//.exec(t)||/SCHEDULED\s+[A-Z]{3}\/([A-Z]{4})\s+\d{3,4}Z-\d{3,4}L\s*-\s*[A-Z]{3}\/([A-Z]{4})/.exec(t);
   if(od){d.orig=od[1];d.dest=od[2];}
+  (function(){if(!d.dest)return;try{var re=new RegExp('N\\s*(\\d{2})(\\d{2}(?:\\.\\d)?)\\b[\\s\\S]{0,80}?\\b'+d.dest+'\\s+W(\\d{2,3})(\\d{2}(?:\\.\\d)?)');var m=re.exec(t);if(m){d.destLat=(+m[1])+(+m[2])/60;d.destLon=-((+m[3])+(+m[4])/60);}}catch(e){}})();
   var ete=/ETE[-:\s]+(\d{1,2}):(\d{2})/.exec(t);
   if(ete){d.eteH=String(+ete[1]);d.eteM=ete[2];}
   d.agate=rx(/SCHEDULED GATE\s+([A-Z]?\d+[A-Z]?)/,t);
